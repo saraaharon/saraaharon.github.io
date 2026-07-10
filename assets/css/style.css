@@ -6,272 +6,217 @@
     box-sizing:border-box;
 }
 
+
 /* COLORS */
 
 :root{
-
     --blue:#2563EB;
-
     --dark:#0F172A;
-
     --light:#F8FAFC;
-
     --gray:#64748B;
-
 }
+
 
 /* BODY */
 
 body{
-
     font-family:'Inter',sans-serif;
-
     background:var(--light);
-
     color:var(--dark);
-
+    overflow-x:hidden;
 }
+
 
 /* NAVBAR */
 
 nav{
-
     width:90%;
-
     max-width:1200px;
-
     margin:auto;
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
     padding:30px 0;
-
 }
 
 .logo{
-
     font-size:28px;
-
     font-weight:700;
-
 }
 
 nav ul{
-
     display:flex;
-
     list-style:none;
-
     gap:35px;
-
 }
 
 nav a{
-
     text-decoration:none;
-
     color:var(--dark);
-
     font-weight:500;
-
     transition:.3s;
-
 }
 
 nav a:hover{
-
     color:var(--blue);
-
 }
+
 
 /* HERO */
 
 .hero{
-
     min-height:85vh;
-
     display:flex;
-
     align-items:center;
-
 }
 
 .hero-content{
-
     width:90%;
-
     max-width:1200px;
-
     margin:auto;
-
 }
 
 .eyebrow{
-
     color:var(--blue);
-
     font-weight:700;
-
     letter-spacing:2px;
-
     margin-bottom:20px;
-
 }
 
 .hero h1{
-
     font-size:72px;
-
     max-width:850px;
-
     line-height:1.1;
-
     margin-bottom:30px;
-
 }
 
 .description{
-
     max-width:700px;
-
     font-size:22px;
-
     line-height:1.8;
-
     color:var(--gray);
-
     margin-bottom:45px;
-
 }
+
 
 /* BUTTONS */
 
 .buttons{
-
     display:flex;
-
     gap:20px;
-
 }
 
 .buttons a{
-
     text-decoration:none;
-
     padding:16px 34px;
-
     border-radius:10px;
-
     font-weight:600;
-
     transition:.3s;
-
 }
 
 .primary{
-
     background:var(--blue);
-
     color:white;
-
 }
 
 .primary:hover{
-
     transform:translateY(-2px);
-
 }
 
 .secondary{
-
     border:2px solid var(--blue);
-
     color:var(--blue);
-
 }
 
 .secondary:hover{
-
     background:var(--blue);
-
     color:white;
-
 }
 
-/* ---------- RESEARCH ---------- */
+
+/* RESEARCH */
 
 .research{
-
     padding:120px 0;
-
     background:white;
-
 }
+
 
 .container{
-
     width:90%;
-
     max-width:1200px;
-
     margin:auto;
-
 }
+
 
 .research h2{
-
     font-size:42px;
-
     margin-bottom:60px;
-
 }
+
 
 .research-card{
 
     display:grid;
-
     grid-template-columns:1fr 1fr;
-
     gap:60px;
-
     align-items:center;
 
 }
 
+
+/* IMAGE CARD */
+
 .research-image{
+
     display:flex;
     flex-direction:column;
     align-items:center;
+    justify-content:center;
 
     background:white;
     padding:25px;
 
     border-radius:24px;
+
     box-shadow:0 15px 35px rgba(0,0,0,.08);
+
 }
+
 
 .research-image img{
 
     width:100%;
     max-width:520px;
 
-    border-radius:12px;
-
     height:auto;
 
     display:block;
+
+    border-radius:12px;
+
 }
+
+
 .image-caption{
+
+    width:100%;
+
     margin-top:15px;
-    font-size:.9rem;
-    color:#6b7280;
-    font-style:italic;
+
     text-align:center;
+
+    font-size:.9rem;
+
+    color:#6b7280;
+
+    font-style:italic;
+
 }
+
+
+
+/* RESEARCH TEXT */
 
 .research-text h3{
 
@@ -280,6 +225,7 @@ nav a:hover{
     margin-bottom:25px;
 
 }
+
 
 .research-text p{
 
@@ -293,6 +239,7 @@ nav a:hover{
 
 }
 
+
 .research-text a{
 
     color:#2563EB;
@@ -302,6 +249,9 @@ nav a:hover{
     text-decoration:none;
 
 }
+
+
+/* TAGS */
 
 .tags{
 
@@ -314,6 +264,7 @@ nav a:hover{
     margin-bottom:35px;
 
 }
+
 
 .tags span{
 
@@ -330,45 +281,14 @@ nav a:hover{
     font-weight:600;
 
 }
-.image-caption{
-    text-align:center;
-    margin-top:15px;
 
-    font-size:0.9rem;
-    color:#6b7280;
 
-    font-style:italic;
-}
+
+/* FOOTER */
+
 footer{
 
-    margin-top:120px;
-
-    padding:60px 20px;
-
-    background:#0f172a;
-
-    color:white;
-
-    text-align:center;
-
-}
-
-footer h3{
-
-    font-size:2rem;
-
-    margin-bottom:15px;
-
-}
-
-footer p{
-
-    opacity:.8;
-
-    margin:8px 0;
-
-}
-footer{
+    width:100%;
 
     margin-top:120px;
 
@@ -382,6 +302,7 @@ footer{
 
 }
 
+
 footer h3{
 
     font-size:2rem;
@@ -390,11 +311,15 @@ footer h3{
 
 }
 
+
 footer p{
 
     color:#cbd5e1;
 
+    margin:8px 0;
+
 }
+
 
 .footer-links{
 
@@ -404,11 +329,14 @@ footer p{
 
     justify-content:center;
 
+    align-items:center;
+
     gap:35px;
 
     flex-wrap:wrap;
 
 }
+
 
 .footer-links a{
 
@@ -422,11 +350,13 @@ footer p{
 
 }
 
+
 .footer-links a:hover{
 
     color:#3b82f6;
 
 }
+
 
 .copyright{
 
@@ -435,5 +365,33 @@ footer p{
     font-size:.9rem;
 
     color:#94a3b8;
+
+}
+
+
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+    .research-card{
+
+        grid-template-columns:1fr;
+
+    }
+
+
+    .hero h1{
+
+        font-size:48px;
+
+    }
+
+
+    nav ul{
+
+        gap:15px;
+
+    }
 
 }
