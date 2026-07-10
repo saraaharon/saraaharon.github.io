@@ -400,8 +400,6 @@ footer p{
 /* ABOUT PAGE */
 
 
-/* ABOUT PAGE */
-
 .about-page{
 
     padding:120px 0;
@@ -424,7 +422,7 @@ footer p{
 
     font-size:40px;
 
-    margin-bottom:50px;
+    margin-bottom:40px;
 
 }
 
@@ -433,9 +431,11 @@ footer p{
 
     width:100%;
 
-    font-size:22px;
+    text-align:center;
 
-    line-height:1.9;
+    font-size:18px;
+
+    line-height:1.5;
 
     color:#64748B;
 
