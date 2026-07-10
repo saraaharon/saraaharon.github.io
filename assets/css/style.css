@@ -70,10 +70,37 @@ nav a:hover{
     align-items:center;
 }
 
-.hero-content{
-    width:90%;
-    max-width:1200px;
-    margin:auto;
+.hero-inner {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.hero-content {
+    flex: 1 1 50%;
+    max-width: 600px;
+}
+
+.hero-visual {
+    flex: 1 1 40%;
+    max-width: 480px;
+}
+
+.hero-visual img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+@media (max-width: 900px) {
+    .hero-inner {
+        flex-direction: column;
+        text-align: center;
+    }
 }
 
 .eyebrow{
@@ -84,18 +111,48 @@ nav a:hover{
 }
 
 .hero h1{
-    font-size:72px;
-    max-width:850px;
+    font-size:42px;
+    max-width:700px;
     line-height:1.1;
     margin-bottom:30px;
 }
 
 .description{
     max-width:700px;
-    font-size:22px;
+    font-size:20px;
     line-height:1.8;
     color:var(--gray);
     margin-bottom:45px;
+}
+
+.hero-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.hero-content {
+    flex: 1 1 50%;
+    max-width: 600px;
+}
+
+.hero-visual {
+    flex: 1 1 40%;
+    max-width: 480px;
+}
+
+.hero-visual img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+@media (max-width: 900px) {
+    .hero-inner {
+        flex-direction: column;
+        text-align: center;
+    }
 }
 
 
