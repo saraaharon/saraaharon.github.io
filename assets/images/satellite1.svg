@@ -1,51 +1,37 @@
 <svg width="100%" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg" role="img">
-<title>Animated satellite orbiting a full circular Earth with twinkling stars</title>
-<desc>A satellite with solar panels moves along an elliptical orbit around a full circular Earth with simple continent shapes, while four-pointed sparkle stars twinkle around it.</desc>
-
-<defs>
-  <clipPath id="earthClip">
-    <circle cx="340" cy="280" r="110"/>
-  </clipPath>
-</defs>
+<title>Animated satellite orbiting Earth with twinkling stars</title>
+<desc>A satellite with solar panels moves along an orbital path above a curved Earth horizon, while four-pointed sparkle stars twinkle around it.</desc>
 
 <g fill="#93A5FF">
-  <path d="M100 70 L104 80 L114 84 L104 88 L100 98 L96 88 L86 84 L96 80 Z">
+  <path d="M120 90 L124 100 L134 104 L124 108 L120 118 L116 108 L106 104 L116 100 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="2.2s" begin="0s" repeatCount="indefinite"/>
   </path>
-  <path d="M580 110 L583 117 L590 120 L583 123 L580 130 L577 123 L570 120 L577 117 Z">
+  <path d="M560 130 L563 137 L570 140 L563 143 L560 150 L557 143 L550 140 L557 137 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="1.8s" begin="0.4s" repeatCount="indefinite"/>
   </path>
-  <path d="M610 400 L614 410 L624 414 L614 418 L610 428 L606 418 L596 414 L606 410 Z">
+  <path d="M600 380 L604 390 L614 394 L604 398 L600 408 L596 398 L586 394 L596 390 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="2.5s" begin="0.8s" repeatCount="indefinite"/>
   </path>
-  <path d="M70 440 L73 447 L80 450 L73 453 L70 460 L67 453 L60 450 L67 447 Z">
+  <path d="M90 420 L93 427 L100 430 L93 433 L90 440 L87 433 L80 430 L87 427 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="2s" begin="1.1s" repeatCount="indefinite"/>
   </path>
-  <path d="M470 50 L473 57 L480 60 L473 63 L470 70 L467 63 L460 60 L467 57 Z">
+  <path d="M480 60 L483 67 L490 70 L483 73 L480 80 L477 73 L470 70 L477 67 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="2.3s" begin="0.2s" repeatCount="indefinite"/>
   </path>
-  <path d="M190 500 L193 507 L200 510 L193 513 L190 520 L187 513 L180 510 L187 507 Z">
+  <path d="M200 480 L203 487 L210 490 L203 493 L200 500 L197 493 L190 490 L197 487 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="1.9s" begin="1.4s" repeatCount="indefinite"/>
   </path>
-  <path d="M560 480 L563 487 L570 490 L563 493 L560 500 L557 493 L550 490 L557 487 Z">
+  <path d="M540 460 L543 467 L550 470 L543 473 L540 480 L537 473 L530 470 L537 467 Z">
     <animate attributeName="opacity" values="1;0.25;1" dur="2.1s" begin="0.6s" repeatCount="indefinite"/>
   </path>
-  <path d="M60 200 L63 207 L70 210 L63 213 L60 220 L57 213 L50 210 L57 207 Z">
-    <animate attributeName="opacity" values="1;0.25;1" dur="2.4s" begin="1.7s" repeatCount="indefinite"/>
-  </path>
 </g>
 
-<ellipse cx="340" cy="280" rx="230" ry="95" fill="none" stroke="#C7D2FE" stroke-width="1.5" stroke-dasharray="6 6"/>
+<ellipse cx="340" cy="470" rx="230" ry="60" fill="none" stroke="#C7D2FE" stroke-width="1.5" stroke-dasharray="6 6"/>
 
-<circle cx="340" cy="280" r="110" fill="#7C9CFF"/>
-<g clip-path="url(#earthClip)">
-  <ellipse cx="280" cy="240" rx="55" ry="30" fill="#8FE3B0"/>
-  <ellipse cx="390" cy="310" rx="45" ry="26" fill="#8FE3B0"/>
-  <ellipse cx="320" cy="330" rx="30" ry="18" fill="#8FE3B0"/>
-  <circle cx="420" cy="280" r="95" fill="#2C46C7" opacity="0.28"/>
-</g>
+<path d="M120 540 A220 220 0 0 1 560 540 Z" fill="#4C6FFF" opacity="0.15"/>
+<path d="M150 540 A190 190 0 0 1 530 540 Z" fill="#4C6FFF" opacity="0.25"/>
 
-<path id="orbitpath" d="M 570 280 A 230 95 0 1 1 110 280 A 230 95 0 1 1 570 280" fill="none" stroke="none"/>
+<path id="orbitpath" d="M 570 470 A 230 60 0 1 1 110 470 A 230 60 0 1 1 570 470" fill="none" stroke="none"/>
 
 <g>
   <g transform="rotate(-18)">
