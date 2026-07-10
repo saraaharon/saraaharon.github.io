@@ -115,6 +115,7 @@ nav a:hover{
     max-width:700px;
     line-height:1.1;
     margin-bottom:30px;
+
 }
 
 .description{
@@ -123,6 +124,7 @@ nav a:hover{
     line-height:1.8;
     color:var(--gray);
     margin-bottom:45px;
+    text-align: justify;
 }
 
 .hero-inner {
@@ -281,6 +283,8 @@ nav a:hover{
 
     margin-bottom:25px;
 
+    text-align: center;
+
 }
 
 
@@ -293,6 +297,8 @@ nav a:hover{
     color:#64748B;
 
     margin-bottom:35px;
+
+    text-align: justify;
 
 }
 
@@ -320,6 +326,8 @@ nav a:hover{
 
     margin-bottom:35px;
 
+
+
 }
 
 
@@ -336,7 +344,6 @@ nav a:hover{
     font-size:15px;
 
     font-weight:600;
-
 }
 
 
