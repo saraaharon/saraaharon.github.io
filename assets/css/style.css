@@ -474,6 +474,14 @@ footer p{
 
 }
 
+@media (max-width: 768px){
+
+    .footer-links{
+        gap:18px;
+    }
+
+}
+
 
 /* ABOUT PAGE */
 
