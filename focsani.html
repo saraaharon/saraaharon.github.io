@@ -17,6 +17,52 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/research.css">
 
+    <style>
+
+        /* Align landscape result pairs (NDBI, PD, LST, MVA) so both
+           boxes in a row match height and captions line up. */
+        .results-grid.landscape-pair{
+
+            align-items:stretch;
+
+        }
+
+        .results-grid.landscape-pair figure{
+
+            display:flex;
+            flex-direction:column;
+
+        }
+
+        .results-grid.landscape-pair .img-box{
+
+            height:420px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#fff;
+            border-radius:18px;
+
+        }
+
+        .results-grid.landscape-pair .img-box img{
+
+            width:100%;
+            height:100%;
+            object-fit:contain;
+
+        }
+
+        .results-grid.landscape-pair figcaption{
+
+            margin-top:auto;
+            padding-top:14px;
+
+        }
+
+
+    </style>
+
 </head>
 
 <body>
@@ -107,10 +153,19 @@
 
             <div class="project-hero-media">
 
-                <img src="assets/images/focsani/VN2.jpg"
-                     alt="Geographical framework map of Focșani Municipality and Vrancea County">
+    <figure style="margin:0;">
+        <img src="assets/images/focsani/2010.jpg"
+             alt="Satellite image of Focșani in 2010">
+        <figcaption style="text-align:center; margin-top:10px; font-weight:600; color:var(--gray);">2010</figcaption>
+    </figure>
 
-            </div>
+    <figure style="margin:24px 0 0;">
+        <img src="assets/images/focsani/2023.jpg"
+             alt="Satellite image of Focșani in 2023">
+        <figcaption style="text-align:center; margin-top:10px; font-weight:600; color:var(--gray);">2023</figcaption>
+    </figure>
+
+</div>
 
         </div>
 
@@ -180,7 +235,7 @@
 
             <h3>Satellite Data</h3>
 
-            <p>Sentinel-2 • Landsat 8/9 • GHS-POP</p>
+            <p>Sentinel-2 ✧ Landsat 8/9 ✧ GHS-POP</p>
 
         </div>
 
@@ -188,7 +243,7 @@
 
             <h3>Method</h3>
 
-            <p>NDVI • NDBI • LST • PD — Google Earth Engine</p>
+            <p>NDVI ✧ NDBI ✧ LST ✧ PD ✧ Google Earth Engine</p>
 
         </div>
 
@@ -212,9 +267,9 @@
             <p>
                 Focșani Municipality lies within Vrancea County, at the contact
                 zone between the Sub-Carpathians and the Romanian Plain. The
-                administrative area also includes ten neighbouring localities —
+                administrative area also includes ten neighbouring localities:
                 Odobești, Vânători, Cîmpineanca, Vârteșcoiu, Golești, Rastoaca,
-                Milcovul, Slobozia Ciorăști, Cotești and Cârligele — analysed
+                Milcovul, Slobozia Ciorăști, Cotești and Cârligele, which are analysed
                 together to capture the broader dynamics of urban expansion
                 around the municipality.
             </p>
@@ -334,8 +389,9 @@
  
         <p class="methodology-caption" style="margin-top:40px;">
             Built-up areas grew by +26.61%, green spaces grew by only +7.69%,
-            while population fell by -16.80% — a widening gap between urban
-            expansion and green infrastructure growth. Source: INS.
+            while population fell by -16.80%, a widening gap between urban
+            expansion and green infrastructure growth. 
+            <br>Source: INS.
         </p>
  
     </div>
@@ -361,19 +417,23 @@
             </p>
         </div>
 
-        <div class="results-grid">
+        <div class="results-grid landscape-pair">
 
             <figure>
-                <img src="assets/images/focsani/NDBI-evo.png"
-                     alt="Three maps showing NDBI in 1990, 2025 and the raster difference">
+                <div class="img-box">
+                    <img src="assets/images/focsani/NDBI-evo.png"
+                         alt="Three maps showing NDBI in 1990, 2025 and the raster difference">
+                </div>
                 <figcaption>
                     NDBI in 1990 (A), 2025 (B), and the raster difference (C)
                 </figcaption>
             </figure>
 
             <figure>
-                <img src="assets/images/focsani/ndbi-chart.png"
-                     alt="Bar chart of NDBI evolution by locality 1990-2025">
+                <div class="img-box">
+                    <img src="assets/images/focsani/ndbi-chart.png"
+                         alt="Bar chart of NDBI evolution by locality 1990-2025">
+                </div>
                 <figcaption>
                     NDBI change by locality, showing the strongest increases in
                     Golești (+104%) and Focșani Municipality (+98.9%)
@@ -402,7 +462,8 @@
 
         <div class="section-heading">
             <span class="section-label">Results</span>
-            <h2>Evolution of Population Density (PD), 1990–2025</h2>
+            <h2>Evolution of Population Density (PD), 
+                <br>1990–2025</h2>
             <p>
                 GHS-POP data for Focșani and its ten neighbouring localities
                 were compared between 1990 and 2025 to trace population
@@ -410,11 +471,13 @@
             </p>
         </div>
 
-        <div class="results-grid">
+        <div class="results-grid landscape-pair">
 
             <figure>
-                <img src="assets/images/focsani/PD-evo.png"
-                     alt="Three maps showing population density in 1990, 2025 and the raster difference">
+                <div class="img-box">
+                    <img src="assets/images/focsani/PD-evo.png"
+                         alt="Three maps showing population density in 1990, 2025 and the raster difference">
+                </div>
                 <figcaption>
                     Population density in 1990 (A), 2025 (B), and the raster
                     difference (C)
@@ -422,8 +485,10 @@
             </figure>
 
             <figure>
-                <img src="assets/images/focsani/pd-chart.png"
-                     alt="Bar chart of percentage population change by locality 1990-2025">
+                <div class="img-box">
+                    <img src="assets/images/focsani/pd-chart.png"
+                         alt="Bar chart of percentage population change by locality 1990-2025">
+                </div>
                 <figcaption>
                     Percentage population change by locality, 1990–2025
                 </figcaption>
@@ -489,11 +554,13 @@
             <h2>Evolution of Land Surface Temperature (LST), 2000–2024</h2>
         </div>
 
-        <div class="results-grid">
+        <div class="results-grid landscape-pair">
 
             <figure>
-                <img src="assets/images/focsani/LST-evo.png"
-                     alt="Three maps showing land surface temperature in 2000, 2024 and the raster difference">
+                <div class="img-box">
+                    <img src="assets/images/focsani/LST-evo.png"
+                         alt="Three maps showing land surface temperature in 2000, 2024 and the raster difference">
+                </div>
                 <figcaption>
                     Annual average LST in 2000 (A), 2024 (B), and the raster
                     difference (C)
@@ -501,8 +568,10 @@
             </figure>
 
             <figure>
-                <img src="assets/images/focsani/precip-temp.png"
-                     alt="Line chart of temperature and precipitation evolution in Focsani 1970-2025">
+                <div class="img-box">
+                    <img src="assets/images/focsani/precip-temp.png"
+                         alt="Line chart of temperature and precipitation evolution in Focsani 1970-2025">
+                </div>
                 <figcaption>
                     Evolution of temperatures and precipitation in Focșani,
                     1970–2025
@@ -542,17 +611,21 @@
             </p>
         </div>
 
-        <div class="results-grid">
+        <div class="results-grid landscape-pair">
 
             <figure>
-                <img src="assets/images/focsani/MVA.png"
-                     alt="Map of four spatial clusters across Focsani and neighbouring localities">
+                <div class="img-box">
+                    <img src="assets/images/focsani/MVA.png"
+                         alt="Map of four spatial clusters across Focsani and neighbouring localities">
+                </div>
                 <figcaption>Four spatial clusters across the study area</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/images/focsani/boxplot.png"
-                     alt="Boxplot of standardized NDVI, LST, PD and NDBI values by cluster">
+                <div class="img-box">
+                    <img src="assets/images/focsani/boxplot.png"
+                         alt="Boxplot of standardized NDVI, LST, PD and NDBI values by cluster">
+                </div>
                 <figcaption>Standardized indicator values by cluster</figcaption>
             </figure>
 
@@ -683,7 +756,7 @@
         <h3>Sara Aharon</h3>
 
         <p>
-            Earth Observation • GIS • Remote Sensing
+            Earth Observation ✧ GIS ✧ Remote Sensing
         </p>
 
         <div class="footer-links">
