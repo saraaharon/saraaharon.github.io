@@ -6,18 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sara Aharon | Earth Observation & GIS</title>
-
-    <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <title>Projects | Sara Aharon</title>
 
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/projects.css">
 
 </head>
-
 
 <body>
 
@@ -30,11 +24,8 @@
     <ul>
 
         <li><a href="index.html">Home</a></li>
-
         <li><a href="research.html">Research</a></li>
-
         <li><a href="projects.html">Projects</a></li>
-
         <li><a href="about.html">About</a></li>
 
     </ul>
@@ -42,64 +33,219 @@
 </nav>
 
 
+<section class="projects-hero">
+
+    <div class="container">
+
+        <h1>Projects</h1>
+
+        <p>
+            A collection of GIS, Earth Observation and Remote Sensing projects
+            developed using Google Earth Engine, ArcGIS Online, Python,
+            ArcGIS Pro and modern geospatial technologies.
+        </p>
+
+    </div>
+
+</section>
+
+<section class="projects-filter">
+
+    <div class="container">
+
+        <button class="filter-btn active" data-filter="all">
+            All
+        </button>
+
+        <button class="filter-btn" data-filter="gee">
+            Google Earth Engine
+        </button>
+
+        <button class="filter-btn" data-filter="arcgis">
+            ArcGIS
+        </button>
+
+        <button class="filter-btn" data-filter="qgis">
+            QGIS
+        </button>
+
+        <button class="filter-btn" data-filter="python">
+            Python
+        </button>
+
+        <button class="filter-btn" data-filter="webgis">
+            Web GIS
+        </button>
+
+    </div>
+
+</section>
+
+<section class="projects-gallery">
+
+    <div class="container">
+
+        <div class="projects-grid">
+
+            <!-- Card 1 -->
+
+            <div class="project-card">
+
+                <img src="assets/images/kophiphi/kophiphi.png" alt="Project">
+
+                <div class="project-info">
+
+                    <h3>Ko Phi Phi Shoreline Analysis</h3>
+
+                    <p>
+                        Google Earth Engine workflow for shoreline extraction
+                        and multi-temporal change detection.
+                    </p>
+
+                    <a href="ko-phi-phi-don.html" class="explore-link">
+                        Explore <span>&rarr;</span>
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- Card 2 -->
+
+            <div class="project-card">
+
+                <img src="assets/images/focsani/focsani2.png" alt="Project">
+
+                <div class="project-info">
+
+                    <h3>Focșani Green Infrastructure</h3>
+
+                    <p>
+                        Urban environmental analysis using NDVI, NDBI,
+                        LST and population density.
+                    </p>
+
+                    <a href="focsani.html" class="explore-link">
+                        Explore <span>&rarr;</span>
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Around the World StoryMap -->
+
+
+
+            <div class="project-card" data-category="webgis arcgis">
+
+                <img src="assets/images/projects/carpati.JPG" alt="Around the World StoryMap">
+
+                <div class="project-info">
+
+                <h3>Around the World: Places I've Visited</h3>
+
+                <p>
+            An interactive ArcGIS StoryMap showcasing places I have visited around
+            the world through maps, photographs, and location-based storytelling.
+            Explore destinations by clicking on each location to discover images
+            and experiences from my travels.
+                </p>
+
+                <a href="https://storymaps.arcgis.com/stories/781534feb46641ddb89057faf9895576"
+           class="explore-link"
+           target="_blank">
+            Explore <span>&rarr;</span>
+                </a>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Vrancea Tourist Attractions -->
+
+            <div class="project-card" data-category="webgis arcgis">
+
+        <img src="assets/images/projects/putna.JPG" alt="Vrancea Tourist Attractions">
+
+        <div class="project-info">
+
+            <h3>Discover Vrancea: An Interactive Tourist Map</h3>
+
+            <p>
+            An interactive Web GIS application highlighting museums,
+            mausoleums, natural wonders, and protected areas across
+            Vrancea County. Users can explore each location through
+            clickable map icons and discover key cultural and natural
+            attractions.
+            </p>
+
+            <a href="https://www.arcgis.com/apps/instant/basic/index.html?appid=a9924f11add347c3aaec921a47e7d7f3"
+           class="explore-link"
+           target="_blank">
+            Explore <span>&rarr;</span>
+            </a>
+
+        </div>
+
+            </div>
+
+
+
+
+
+            <!-- Empty cards for now -->
+
+            <div class="project-card"></div>
+
+            <div class="project-card"></div>
+
+            <div class="project-card"></div>
+
+            <div class="project-card"></div>
+
+        </div>
+
+    </div>
+
+</section>
 
 
 <footer>
 
-
     <div class="container">
 
-
-        <h3>
-            Sara Aharon
-        </h3>
-
+        <h3>Sara Aharon</h3>
 
         <p>
             Earth Observation • GIS • Remote Sensing
         </p>
 
-
-
         <div class="footer-links">
 
+            <a href="https://github.com/saraaharon" target="_blank">GitHub</a>
 
-            <a href="https://github.com/saraaharon" target="_blank">
-                GitHub
-            </a>
+            <a href="https://www.linkedin.com/in/saraaharon/" target="_blank">LinkedIn</a>
 
+            <a href="https://orcid.org/0009-0001-8809-5491" target="_blank">ORCID</a>
 
-            <a href="https://www.linkedin.com/in/saraaharon/" target="_blank">
-                LinkedIn
-            </a>
-
-
-            <a href="https://orcid.org/0009-0001-8809-5491" target="_blank">
-                ORCID
-            </a>
-
-
-            <a href="mailto:sara.aharon@yahoo.com">
-                Email
-            </a>
-
+            <a href="mailto:sara.aharon@yahoo.com">Email</a>
 
         </div>
-
-
 
         <p class="copyright">
             © 2026 Sara Aharon
         </p>
 
-
     </div>
-
 
 </footer>
 
-
-
 </body>
 
-</html>    
+</html>
