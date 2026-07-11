@@ -1,0 +1,85 @@
+/* ===========================
+   RESEARCH PAGE
+=========================== */
+
+.research-card{
+    max-width:1200px;
+    margin:100px auto;
+    padding:0 40px;
+
+    display:flex;
+    align-items:center;
+    gap:70px;
+}
+
+.research-card img{
+    width:430px;
+    border-radius:20px;
+    box-shadow:0 10px 35px rgba(0,0,0,.08);
+    transition:.3s;
+}
+
+.research-card img:hover{
+    transform:scale(1.02);
+}
+
+.research-content{
+    flex:1;
+}
+
+.research-content h2{
+    font-size:38px;
+    line-height:1.25;
+    margin-bottom:25px;
+}
+
+.research-content p{
+    font-size:20px;
+    line-height:1.8;
+    color:var(--gray);
+    text-align:justify;
+    margin-bottom:35px;
+}
+
+.research-card .btn{
+    display:inline-block;
+}
+
+/* Divider between projects */
+
+.research-card + .research-card{
+    border-top:1px solid #ececec;
+    padding-top:100px;
+}
+
+/* Alternate layout */
+
+.research-card:nth-child(even){
+    flex-direction:row-reverse;
+}
+
+/* Responsive */
+
+@media(max-width:900px){
+
+    .research-card{
+        flex-direction:column !important;
+        text-align:center;
+        gap:40px;
+    }
+
+    .research-card img{
+        width:100%;
+        max-width:500px;
+    }
+
+    .research-content h2{
+        font-size:30px;
+    }
+
+    .research-content p{
+        text-align:left;
+        font-size:18px;
+    }
+
+}
