@@ -392,6 +392,8 @@ footer p{
 
     color:#cbd5e1;
 
+    white-space: nowrap;
+
     margin:8px 0;
 
 }
