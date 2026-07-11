@@ -1,0 +1,518 @@
+/* ===========================
+   PROJECT HERO
+=========================== */
+
+.project-hero{
+
+    padding:120px 0 70px;
+
+}
+
+.project-label{
+
+    display:inline-block;
+    color:var(--main-color);
+    font-weight:700;
+    margin-bottom:20px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+
+}
+
+.project-hero h1{
+
+    font-size:56px;
+    line-height:1.15;
+    max-width:850px;
+    margin-bottom:20px;
+
+}
+
+.project-hero h2{
+
+    font-size:28px;
+    font-weight:400;
+    color:var(--gray);
+    margin-bottom:35px;
+
+}
+
+.project-intro{
+
+    max-width:760px;
+    font-size:20px;
+    line-height:1.8;
+    color:var(--gray);
+    text-align:justify;
+
+}
+
+.project-buttons{
+
+    display:flex;
+    gap:18px;
+    margin:45px 0;
+
+}
+
+.project-tags{
+
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+
+}
+
+.project-tags span{
+
+    padding:10px 18px;
+    border:1px solid #ddd;
+    border-radius:40px;
+    font-size:14px;
+    color:var(--gray);
+
+}
+
+
+/* ===========================
+   HERO GRID (text + side image)
+=========================== */
+
+.project-hero-grid{
+
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:50px;
+    align-items:center;
+
+}
+
+.project-hero-media img{
+
+    width:100%;
+    border-radius:18px;
+    display:block;
+
+}
+
+@media (max-width:900px){
+
+    .project-hero-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .project-hero-media{
+
+        order:-1;
+
+    }
+
+}
+
+
+/* ===========================
+   HERO IMAGE
+=========================== */
+
+.project-image{
+
+    margin:70px 0;
+
+}
+
+.project-image img{
+
+    width:100%;
+    border-radius:20px;
+
+}
+
+
+/* ===========================
+   PROJECT FACTS
+=========================== */
+
+.project-facts .container{
+
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:25px;
+
+}
+
+.fact-card{
+
+    background:#fafafa;
+    padding:35px;
+    border-radius:18px;
+
+}
+
+.fact-card h3{
+
+    margin-bottom:10px;
+
+}
+
+.fact-card p{
+
+    color:var(--gray);
+
+}
+
+
+/* ===========================
+   SECTION HEADINGS
+   (shared by study-area, methodology, results, key-findings, conclusion)
+=========================== */
+
+.section-label{
+
+    display:block;
+    text-align:center;
+    color:var(--main-color);
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    font-size:14px;
+    margin-bottom:15px;
+
+}
+
+.section-heading{
+
+    text-align:center;
+    max-width:760px;
+    margin:0 auto 60px;
+
+}
+
+.section-heading h2{
+
+    font-size:36px;
+    margin-bottom:18px;
+
+}
+
+.section-heading p{
+
+    font-size:18px;
+    line-height:1.8;
+    color:var(--gray);
+
+}
+
+
+/* ===========================
+   STUDY AREA
+=========================== */
+
+.study-area{
+
+    padding:90px 0;
+    background:#fafafa;
+
+}
+
+.study-area-grid{
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:30px;
+    align-items:start;
+
+}
+
+.study-area-grid figure{
+
+    margin:0;
+
+}
+
+.study-area-grid img{
+
+    width:100%;
+    border-radius:18px;
+    display:block;
+
+}
+
+.study-area-grid figcaption{
+
+    font-size:14px;
+    color:var(--gray);
+    margin-top:14px;
+    text-align:center;
+
+}
+
+
+/* ===========================
+   METHODOLOGY
+=========================== */
+
+.methodology{
+
+    padding:90px 0;
+
+}
+
+.methodology img{
+
+    width:100%;
+    max-width:950px;
+    display:block;
+    margin:0 auto 20px;
+    border-radius:18px;
+
+}
+
+.methodology-caption{
+
+    text-align:center;
+    font-size:15px;
+    color:var(--gray);
+    max-width:700px;
+    margin:0 auto;
+    line-height:1.8;
+
+}
+
+
+/* ===========================
+   COMPARISON PHOTOS
+=========================== */
+
+.comparison-photos{
+
+    padding:90px 0;
+    background:#fafafa;
+
+}
+
+.comparison-grid{
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:30px;
+
+}
+
+.comparison-grid figure{
+
+    margin:0;
+
+}
+
+.comparison-grid img{
+
+    width:100%;
+    border-radius:18px;
+    display:block;
+
+}
+
+.comparison-grid figcaption{
+
+    font-size:15px;
+    color:var(--gray);
+    margin-top:14px;
+    text-align:center;
+    font-weight:600;
+
+}
+
+
+/* ===========================
+   RESULTS
+=========================== */
+
+.results{
+
+    padding:90px 0;
+
+}
+
+.results-grid{
+
+    display:grid;
+    grid-template-columns:1.4fr 1fr;
+    gap:30px;
+    margin-bottom:50px;
+    align-items:start;
+
+}
+
+.results-grid img{
+
+    width:100%;
+    border-radius:18px;
+    display:block;
+
+}
+
+.results-secondary-grid{
+
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:25px;
+    align-items:start;
+    margin-top:50px;
+
+}
+
+.results-secondary-grid figure{
+
+    margin:0;
+    text-align:center;
+
+}
+
+.results-secondary-grid img{
+
+    width:100%;
+    border-radius:18px;
+    display:block;
+    background:#fff;
+
+}
+
+.results-secondary-grid figcaption{
+
+    font-size:14px;
+    color:var(--gray);
+    margin-top:10px;
+
+}
+
+.table-figure{
+
+    margin:50px 0 0;
+    text-align:center;
+
+}
+
+.table-figure img{
+
+    max-width:100%;
+    border-radius:18px;
+
+}
+
+.table-figure figcaption{
+
+    font-size:15px;
+    color:var(--gray);
+    margin-top:14px;
+    line-height:1.7;
+
+}
+
+
+/* ===========================
+   KEY FINDINGS
+=========================== */
+
+.key-findings{
+
+    padding:90px 0;
+    background:#fafafa;
+
+}
+
+.key-findings-grid{
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    align-items:center;
+
+}
+
+.key-findings-grid img{
+
+    width:100%;
+    max-width:320px;
+    margin:0 auto;
+    display:block;
+
+}
+
+.findings-list{
+
+    list-style:none;
+    padding:0;
+    margin:0;
+
+}
+
+.findings-list li{
+
+    padding:18px 0;
+    border-bottom:1px solid #e5e5e0;
+    font-size:17px;
+
+}
+
+.findings-list li:last-child{
+
+    border-bottom:none;
+
+}
+
+.findings-list strong{
+
+    display:block;
+    font-size:24px;
+    color:var(--main-color);
+
+}
+
+
+/* ===========================
+   CONCLUSION
+=========================== */
+
+.conclusion{
+
+    padding:90px 0;
+
+}
+
+.conclusion .section-heading{
+
+    max-width:750px;
+
+}
+
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width:800px){
+
+    .study-area-grid,
+    .comparison-grid,
+    .results-grid,
+    .key-findings-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .results-secondary-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .project-hero h1{
+
+        font-size:38px;
+
+    }
+
+}
