@@ -83,3 +83,21 @@
     }
 
 }
+
+.read-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+
+    color:var(--blue);
+    text-decoration:none;
+    font-weight:600;
+    font-size:16px;
+
+    transition:all .3s ease;
+}
+
+.read-link:hover{
+    color:#2563eb;
+    transform:translateX(4px);
+}
