@@ -1,0 +1,271 @@
+/* ===========================
+   ABOUT PAGE
+   Reuses --blue / --dark / --light / --gray
+   and .hero-inner / .buttons / .eyebrow from style.css
+=========================== */
+
+.about-hero{
+    padding:100px 0 80px;
+    background:var(--light);
+}
+
+.hero-content h1{
+    font-size:42px;
+    line-height:1.2;
+    max-width:600px;
+    margin-bottom:28px;
+}
+
+.hero-content p{
+    font-size:18px;
+    line-height:1.8;
+    color:var(--gray);
+    text-align:justify;
+    margin-bottom:22px;
+}
+
+.hero-content p:last-of-type{
+    margin-bottom:40px;
+}
+
+#earth-container{
+    width:100%;
+    height:400px;
+}
+
+
+/* ===========================
+   SECTION SHELL
+=========================== */
+
+.about-section{
+    padding:100px 0;
+}
+
+.section-title{
+    width:90%;
+    max-width:700px;
+    margin:0 auto 60px;
+    text-align:center;
+}
+
+.section-title h2{
+    font-size:38px;
+    margin-bottom:15px;
+}
+
+.section-title p{
+    font-size:18px;
+    line-height:1.6;
+    color:var(--gray);
+}
+
+
+/* ===========================
+   WHAT I DO — CARDS
+=========================== */
+
+.cards{
+    width:90%;
+    max-width:1200px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:35px;
+}
+
+.card{
+    background:white;
+    border-radius:20px;
+    padding:40px 30px;
+    text-align:center;
+    box-shadow:0 10px 35px rgba(0,0,0,.06);
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 15px 40px rgba(0,0,0,.1);
+}
+
+.card-icon{
+    width:60px;
+    height:60px;
+    margin:0 auto 22px;
+    border-radius:14px;
+    background:#EEF4FF;
+    color:var(--blue);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+}
+
+.card h3{
+    font-size:20px;
+    margin-bottom:12px;
+}
+
+.card p{
+    font-size:16px;
+    line-height:1.7;
+    color:var(--gray);
+}
+
+
+/* ===========================
+   JOURNEY — TIMELINE
+=========================== */
+
+.timeline-section{
+    padding:100px 0;
+    background:var(--light);
+}
+
+.timeline{
+    width:90%;
+    max-width:700px;
+    margin:0 auto;
+    position:relative;
+    padding-left:40px;
+}
+
+.timeline::before{
+    content:'';
+    position:absolute;
+    left:10px;
+    top:6px;
+    bottom:6px;
+    width:2px;
+    background:#E2E8F0;
+}
+
+.timeline-item{
+    position:relative;
+    background:white;
+    border-radius:16px;
+    padding:26px 30px;
+    margin-bottom:30px;
+    box-shadow:0 8px 25px rgba(0,0,0,.05);
+}
+
+.timeline-item:last-child{
+    margin-bottom:0;
+}
+
+.timeline-item::before{
+    content:'';
+    position:absolute;
+    left:-34px;
+    top:30px;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 0 4px var(--light);
+}
+
+.timeline-item span{
+    color:var(--blue);
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:1px;
+}
+
+.timeline-item h3{
+    font-size:20px;
+    margin:10px 0 8px;
+}
+
+.timeline-item p{
+    color:var(--gray);
+    font-size:15px;
+    line-height:1.6;
+}
+
+
+/* ===========================
+   TECHNOLOGIES — PILLS
+=========================== */
+
+.tech-grid{
+    width:90%;
+    max-width:900px;
+    margin:0 auto;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:14px;
+}
+
+.tech-grid span{
+    background:#EEF4FF;
+    color:var(--blue);
+    padding:12px 24px;
+    border-radius:40px;
+    font-size:15px;
+    font-weight:600;
+}
+
+
+/* ===========================
+   LOOKING AHEAD
+=========================== */
+
+.future{
+    padding:100px 0;
+    background:white;
+}
+
+.future-content{
+    width:90%;
+    max-width:750px;
+    margin:0 auto;
+    text-align:center;
+}
+
+.future-content h2{
+    font-size:34px;
+    margin-bottom:22px;
+}
+
+.future-content p{
+    font-size:18px;
+    line-height:1.8;
+    color:var(--gray);
+}
+
+
+/* ===========================
+   MOBILE
+=========================== */
+
+@media(max-width:900px){
+
+    .about-hero{
+        padding:70px 0 50px;
+    }
+
+    .hero-content h1{
+        font-size:32px;
+        max-width:none;
+    }
+
+    .hero-content p{
+        text-align:left;
+    }
+
+    .section-title h2{
+        font-size:30px;
+    }
+
+    .timeline{
+        width:100%;
+        padding-left:34px;
+    }
+
+    #earth-container{
+        height:280px;
+    }
+
+}
