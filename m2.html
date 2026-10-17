@@ -110,15 +110,20 @@ window.AIRPORTS={"type":"FeatureCollection","features":[{"type":"Feature","prope
   const gray = L.layerGroup([esri('Canvas/World_Light_Gray_Base'), esri('Canvas/World_Light_Gray_Reference', { pane: 'labels' })]);
   const streets = esri('World_Street_Map');
   const imagery = L.layerGroup([esri('World_Imagery'), esri('Reference/World_Boundaries_and_Places', { pane: 'labels' })]);
-  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 });
-  gray.addTo(map);
-  L.control.layers({ 'Light gray': gray, 'Streets': streets, 'Satellite': imagery, 'OpenStreetMap': osm }, null,
-    { position: 'topleft', collapsed: true }).addTo(map);
+const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 });
+const topo = esri('World_Topo_Map');
+const roads = esri('Reference/World_Transportation', { pane: 'labels' }); // sits above the bands
+topo.addTo(map);
+roads.addTo(map);
+L.control.layers(
+  { 'Esri Topo': topo, 'Light gray': gray, 'Streets': streets, 'Satellite': imagery, 'OpenStreetMap': osm },
+  { 'Roads & transportation': roads },
+  { position: 'topleft', collapsed: true }).addTo(map);
 
   function style(f) {
     const p = f.properties;
     const on = p.to <= state.T && (!state.ap || p.ap === state.ap);
-    return { fillColor: col(p.band), fillOpacity: on ? (p.est ? 0.5 : 0.8) : 0.04, stroke: on, color: p.est ? '#475569' : '#fff', weight: 0.5, opacity: 0.6, dashArray: p.est ? '3 3' : null };
+    return { fillColor: col(p.band), fillOpacity: on ? (p.est ? 0.35 : 0.6) : 0.04, stroke: on, color: p.est ? '#475569' : '#fff', weight: 0.5, opacity: 0.6, dashArray: p.est ? '3 3' : null };
   }
 
   const info = document.getElementById('info');
