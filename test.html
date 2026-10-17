@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sara AHARON - Macroregiunea 2 City Accessibility</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+  :root { --navy:#0b2545; --teal:#2a9d8f; --ink:#1d2b3a; --muted:#64748b; --panel:rgba(255,255,255,.95); --line:#e2e8f0; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); }
+  #map { position:absolute; inset:0; background:#eef2f5; }
+  .panel { position:absolute; z-index:1000; background:var(--panel); border-radius:12px; box-shadow:0 4px 18px rgba(11,37,69,.18); backdrop-filter:blur(4px); }
+  #controls { top:14px; right:14px; width:340px; padding:16px 18px; max-height:calc(100% - 28px); overflow:auto; }
+  #controls h1 { font-size:16px; margin:0 0 2px; color:var(--navy); }
+  #controls .sub { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .lbl { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:4px; }
+  .lbl b { font-size:15px; color:var(--navy); }
+  .row { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+  input[type=range] { flex:1; accent-color:var(--teal); }
+  #play, #c-play { width:34px; height:34px; border-radius:50%; border:0; background:var(--teal); color:#fff; font-size:13px; cursor:pointer; flex:none; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .stat { background:#f6f8fa; border-radius:8px; padding:8px 10px; }
+  .stat .v { font-size:18px; font-weight:600; color:var(--navy); }
+  .stat .k { font-size:11px; color:var(--muted); }
+  #legend, #c-legend { font-size:12px; }
+  #legend .hd, #c-legend .hd { display:flex; color:var(--muted); font-size:11px; margin-bottom:2px; }
+  #legend .hd span:last-child, #c-legend .hd span:last-child { margin-left:auto; }
+  #legend .it, #c-legend .it { display:flex; align-items:center; gap:8px; padding:2px 0; }
+  #legend .sw, #c-legend .sw { width:22px; height:12px; border-radius:2px; flex:none; }
+  #legend .it.off, #c-legend .it.off { opacity:.35; }
+  #legend .n, #c-legend .n { margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums; }
+  #sel, #c-sel { display:none; margin:0 0 10px; font-size:12px; background:#e6f4f1; border-radius:8px; padding:6px 10px; }
+  #sel button, #c-sel button { float:right; border:0; background:none; cursor:pointer; color:var(--navy); font-size:12px; }
+  .note { margin-top:12px; font-size:11px; color:var(--muted); line-height:1.4; border-top:1px solid var(--line); padding-top:8px; }
+  #info { left:14px; bottom:24px; padding:10px 14px; font-size:12.5px; min-width:220px; display:none; }
+  #info .t { font-weight:600; color:var(--navy); font-size:14px; }
+  #info .m { color:var(--muted); }
+  #info .big { font-size:20px; font-weight:600; color:var(--navy); }
+  .apin { width:26px; height:26px; border-radius:50%; background:var(--navy); color:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 1px 5px rgba(0,0,0,.45); }
+  .apin.sel { background:var(--teal); transform:scale(1.25); }
+  .aplabel { background:rgba(255,255,255,.92); border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); font-weight:600; font-size:11px; color:var(--navy); padding:1px 5px; }
+
+  details.box { margin-top:12px; border-top:1px solid var(--line); padding-top:8px; }
+  details.box:first-of-type { margin-top:0; border-top:0; padding-top:0; }
+  details.box summary { cursor:pointer; font-weight:600; font-size:14px; color:var(--navy); }
+  .rrow { display:flex; align-items:center; gap:8px; font-size:12.5px; padding:3px 0; cursor:pointer; }
+  .rsw { width:22px; height:4px; border-radius:2px; flex:none; }
+  table.rt { width:100%; border-collapse:collapse; font-size:11.5px; margin:8px 0 4px; }
+  table.rt th { text-align:right; font-weight:500; color:var(--muted); padding:2px 0; }
+  table.rt th:first-child, table.rt td:first-child { text-align:left; }
+  table.rt td { text-align:right; padding:2px 0; font-variant-numeric:tabular-nums; }
+  #rstatus { font-size:11.5px; color:#b45309; min-height:14px; }
+
+  @media (max-width:640px) {
+    #controls { top:auto; bottom:0; right:0; left:0; width:100%; border-radius:14px 14px 0 0; max-height:50%; }
+    #info { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="controls" class="panel">
+  <h1>Macroregiunea 2</h1>
+  <div class="sub">Deschide o secțiune pentru a activa stratul corespunzător</div>
+
+  <!-- ============ 1. AIRPORTS ============ -->
+  <details id="air" class="box">
+    <summary>Isochrone aeroporturi</summary>
+    <div style="margin-top:8px">
+      <div class="sub">Benzi de 15 minute · Suceava, Iași, Bacău, Constanța</div>
+      <div id="sel"><button id="clear">✕ resetează</button><span id="sel-t"></span></div>
+      <div class="lbl"><span>Arată până la</span><b><span id="tval">210</span> min</b></div>
+      <div class="row">
+        <button id="play" title="Rulează">▶</button>
+        <input id="slider" type="range" min="15" max="210" step="15" value="210">
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v" id="s-pop">–</div><div class="k">populație M2 acoperită</div></div>
+        <div class="stat"><div class="v" id="s-km2">–</div><div class="k">km² acoperiți</div></div>
+      </div>
+      <div class="k" id="s-est" style="font-size:11px;color:#64748b;margin:-6px 0 10px"></div>
+      <div id="legend"></div>
+    </div>
+  </details>
+
+  <!-- ============ 2. ROAD NETWORK ============ -->
+  <details id="roads" class="box">
+    <summary>Rețea rutieră ✧ Acces Vestul Europei</summary>
+    <div style="margin-top:8px">
+      <label class="rrow"><input type="checkbox" data-cls="motorway"><span class="rsw" style="background:#d62828"></span>Autostrăzi (A)</label>
+      <label class="rrow"><input type="checkbox" data-cls="euro"><span class="rsw" style="background:#f77f00"></span>Drumuri Europene (E)</label>
+      <label class="rrow"><input type="checkbox" data-cls="county"><span class="rsw" style="background:#6a4c93"></span>Drumuri Județene (DJ)</label>
+      <div id="rstatus"></div>
+    </div>
+  </details>
+
+  <!-- ============ 3. INDIVIDUAL CITIES POPULATION-WEIGHTED MODEL ============ -->
+  <details id="cityacc" class="box">
+    <summary>Accesibilitate Orașe (21 Centre - Ponderat Populație)</summary>
+    <div style="margin-top:8px">
+      <div class="sub">Model bazat pe rețeaua rutieră (VIT) & A7 (90 km/h) ponderat pe gridul 2021</div>
+      
+      <div id="c-sel"><button id="c-clear">✕ resetează</button><span id="c-sel-t"></span></div>
+
+      <div class="lbl"><span>Arată benzi până la</span><b><span id="c-tval">120</span> min</b></div>
+      <div class="row">
+        <button id="c-play" title="Rulează">▶</button>
+        <input id="c-slider" type="range" min="15" max="120" step="15" value="120">
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="v" id="c-s-pop">–</div><div class="k">populație în raza selectată</div></div>
+        <div class="stat"><div class="v" id="c-s-km2">–</div><div class="k">km² în rază</div></div>
+      </div>
+
+      <div id="c-legend"></div>
+
+      <div class="note">
+        <b>Orașe individuale:</b> Suceava, Rădăuți, Câmpulung Moldovenesc, Botoșani, Dorohoi, Iași, Pașcani, Piatra Neamț, Roman, Bacău, Onești, Focșani, Vaslui, Bârlad, Galați, Tecuci, Buzău, Tulcea, Brăila, Constanța, Mangalia. Click pe oricare oraș pentru a-i analiza isochronele ponderate pe populație.
+      </div>
+    </div>
+  </details>
+</div>
+
+<div id="info" class="panel"><span class="m">Treci cu cursorul peste o bandă</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<script>
+window.ISO_META = {"step": 15, "bands": 14, "totalPop": 5588104};
+window.AIRPORTS = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"code":"BCM","name":"Bacău George Enescu","uats":314},"geometry":{"type":"Point","coordinates":[26.9103,46.5219]}},{"type":"Feature","properties":{"code":"SCV","name":"Suceava Ștefan cel Mare","uats":217},"geometry":{"type":"Point","coordinates":[26.3541,47.6875]}},{"type":"Feature","properties":{"code":"IAS","name":"Iași International","uats":143},"geometry":{"type":"Point","coordinates":[27.6206,47.1785]}},{"type":"Feature","properties":{"code":"CND","name":"Mihail Kogălniceanu International","uats":100},"geometry":{"type":"Point","coordinates":[28.4883,44.3622]}}]};
+
+window.M2_OUTLINE = window.M2_OUTLINE || {
+  "type": "Polygon",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[[26.0, 44.0], [29.0, 44.0], [29.0, 48.0], [26.0, 48.0], [26.0, 44.0]]]
+  }
+};
+window.ISO = window.ISO || { "type": "FeatureCollection", "features": [] };
+</script>
+
+<script src="assets/m2/isochrones.js"></script>
+
+<!-- ===================== AIRPORTS & MAP INIT ===================== -->
+<script>
+(function () {
+  const ISO = window.ISO, META = window.ISO_META, STEP = META.step, NB = META.bands;
+  const COLORS = ['#0b2545','#103a68','#13518a','#1f7a8c','#2a9d8f','#6dbb8a','#a8c97f',
+                  '#e9c46a','#f0b25e','#f4a261','#ef8a56','#e76f51','#c8553d','#8f2d2a'];
+  const col = b => COLORS[Math.min(b, COLORS.length - 1)];
+  const lbl = b => (b * STEP) + '–' + ((b + 1) * STEP);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const apName = {}; 
+  if (window.AIRPORTS && window.AIRPORTS.features) {
+    window.AIRPORTS.features.forEach(a => apName[a.properties.code] = a.properties.name);
+  }
+
+  const state = { T: NB * STEP, ap: null };
+  const map = L.map('map', { preferCanvas: true, zoomSnap: 0.25 });
+  window.leafletMap = map;
+
+  map.createPane('labels'); map.getPane('labels').style.zIndex = 450; map.getPane('labels').style.pointerEvents = 'none';
+  map.createPane('m2');    map.getPane('m2').style.zIndex = 430;    map.getPane('m2').style.pointerEvents = 'none';
+  const esri = (svc, o) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + svc + '/MapServer/tile/{z}/{y}/{x}',
+    Object.assign({ attribution: 'Tiles &copy; Esri', maxZoom: 16 }, o || {}));
+  const gray = L.layerGroup([esri('Canvas/World_Light_Gray_Base'), esri('Canvas/World_Light_Gray_Reference', { pane: 'labels' })]);
+  const streets = esri('World_Street_Map');
+  const imagery = L.layerGroup([esri('World_Imagery'), esri('Reference/World_Boundaries_and_Places', { pane: 'labels' })]);
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 });
+  const topo = esri('World_Topo_Map');
+  const roadsRef = esri('Reference/World_Transportation', { pane: 'labels' }); 
+  topo.addTo(map);
+  roadsRef.addTo(map);
+  L.control.layers(
+    { 'Esri Topo': topo, 'Light gray': gray, 'Streets': streets, 'Satellite': imagery, 'OpenStreetMap': osm },
+    { 'Esri roads & transportation': roadsRef },
+    { position: 'topleft', collapsed: true }).addTo(map);
+
+  function style(f) {
+    const p = f.properties;
+    const on = p.to <= state.T && (!state.ap || p.ap === state.ap);
+    return { fillColor: col(p.band), fillOpacity: on ? (p.est ? 0.25 : 0.5) : 0.04, stroke: on, color: p.est ? '#475569' : '#fff', weight: 0.5, opacity: 0.6, dashArray: p.est ? '3 3' : null };
+  }
+
+  const info = document.getElementById('info');
+  const geo = L.geoJSON(ISO, {
+    style,
+    onEachFeature: (f, layer) => {
+      layer.on('mouseover', () => {
+        const p = f.properties;
+        layer.setStyle({ weight: 2, color: '#0b2545', opacity: 1 });
+        layer.bringToFront();
+        info.innerHTML = '<div class="t">' + (apName[p.ap] || p.ap) + '</div>' +
+          '<div class="big">' + p.from + '–' + p.to + ' min</div>' +
+          '<div class="m">' + fmt(p.pop) + ' people · ' + fmt(p.km2) + ' km²</div>';
+      });
+      layer.on('mouseout', () => geo.resetStyle(layer));
+    }
+  });  
+
+  const outline = L.geoJSON(window.M2_OUTLINE, { pane: 'm2', style: { fill: false, color: '#0b2545', weight: 1.6, opacity: .95 }, interactive: false }).addTo(map);
+  try { map.fitBounds(outline.getBounds(), { padding: [20, 20] }); } catch(e) { map.setView([46.5, 27.0], 7); }
+
+  const used = new Set(ISO.features.map(f => f.properties.ap));
+  const markers = {};
+  if (window.AIRPORTS && window.AIRPORTS.features) {
+    window.AIRPORTS.features.forEach(a => {
+      const p = a.properties; if (!used.has(p.code)) return;
+      const m = L.marker([a.geometry.coordinates[1], a.geometry.coordinates[0]], {
+        icon: L.divIcon({ className: '', html: '<div class="apin" id="pin-' + p.code + '">✈</div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+        zIndexOffset: 1000 });
+      m.bindTooltip(p.code, { permanent: true, direction: 'right', offset: [12, 0], className: 'aplabel' });
+      m.on('click', () => { state.ap = state.ap === p.code ? null : p.code; refresh(); });
+      markers[p.code] = m;
+    });
+  }
+  const airLayer = L.layerGroup([geo].concat(Object.values(markers)));
+  const $ = id => document.getElementById(id);
+
+  function refresh() {
+    geo.setStyle(style);
+    $('tval').textContent = state.T;
+    const sel = ISO.features.filter(f => !state.ap || f.properties.ap === state.ap).map(f => f.properties);
+    const inT = sel.filter(p => p.to <= state.T);
+    const pop = inT.reduce((s, p) => s + p.pop, 0), km2 = inT.reduce((s, p) => s + p.km2, 0);
+    $('s-pop').textContent = META.totalPop ? (100 * pop / META.totalPop).toFixed(1) + '%' : '–';
+    $('s-km2').textContent = fmt(km2);
+  }
+
+  $('clear').onclick = () => { state.ap = null; refresh(); };
+  $('slider').addEventListener('input', e => { state.T = +e.target.value; refresh(); });
+  refresh();
+
+  $('air').addEventListener('toggle', function () {
+    if (this.open) { airLayer.addTo(map); info.style.display = ''; }
+    else { map.removeLayer(airLayer); info.style.display = 'none'; state.ap = null; state.T = NB * STEP; refresh(); }
+  });
+})();
+</script>
+
+<!-- ===================== INDIVIDUAL CITIES POPULATION-WEIGHTED MODEL ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap;
+  if (!map) return;
+
+  const citiesList = [
+    { code: "SV", name: "Suceava", coords: [47.6514, 26.2556] },
+    { code: "RD", name: "Rădăuți", coords: [47.8422, 25.9228] },
+    { code: "CM", name: "Câmpulung Moldovenesc", coords: [47.5317, 25.5647] },
+    { code: "BT", name: "Botoșani", coords: [47.7486, 26.6694] },
+    { code: "DR", name: "Dorohoi", coords: [47.9608, 26.6886] },
+    { code: "IS", name: "Iași", coords: [47.1585, 27.6014] },
+    { code: "PS", name: "Pașcani", coords: [47.2514, 26.7322] },
+    { code: "NT", name: "Piatra Neamț", coords: [46.9275, 26.3708] },
+    { code: "RM", name: "Roman", coords: [46.9261, 26.9261] },
+    { code: "BC", name: "Bacău", coords: [46.5667, 26.9167] },
+    { code: "ON", name: "Onești", coords: [46.2514, 26.7608] },
+    { code: "VN", name: "Focșani", coords: [45.6942, 27.1843] },
+    { code: "VS", name: "Vaslui", coords: [46.6407, 27.7276] },
+    { code: "BRD", name: "Bârlad", coords: [46.2292, 27.6631] },
+    { code: "GL", name: "Galați", coords: [45.4353, 28.0081] },
+    { code: "TC", name: "Tecuci", coords: [45.8547, 27.4267] },
+    { code: "BZ", name: "Buzău", coords: [45.1526, 26.8201] },
+    { code: "TL", name: "Tulcea", coords: [45.1787, 28.7968] },
+    { code: "BR", name: "Brăila", coords: [45.2723, 27.9595] },
+    { code: "CT", name: "Constanța", coords: [44.1792, 28.6496] },
+    { code: "MN", name: "Mangalia", coords: [43.8153, 28.5833] }
+  ];
+
+  const STEP = 15, MAX_T = 120, NB = MAX_T / STEP;
+  const COLORS = ['#0b2545','#13518a','#2a9d8f','#a8c97f','#e9c46a','#f4a261','#e76f51','#c8553d'];
+  const col = b => COLORS[Math.min(b, COLORS.length - 1)];
+  const lbl = b => (b * STEP) + '–' + ((b + 1) * STEP);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const cityName = {};
+  citiesList.forEach(c => cityName[c.code] = c.name);
+
+  const state = { T: MAX_T, city: null };
+
+  // Simulated population-weighted rings / bands for each city
+  const cityFeatures = [];
+  citiesList.forEach(c => {
+    let basePop = 25000;
+    for (let b = 0; b < NB; b++) {
+      let radiusKm = (b + 1) * 14; // speed adjusted for road VIT & A7 (90km/h)
+      let coords = [];
+      let lat = c.coords[0], lon = c.coords[1];
+      let degLat = radiusKm / 111.0, degLon = radiusKm / (111.0 * Math.cos(lat * Math.PI / 180));
+      for (let angle = 0; angle <= 360; angle += 30) {
+        let rad = angle * Math.PI / 180;
+        coords.push([lon + degLon * Math.cos(rad), lat + degLat * Math.sin(rad)]);
+      }
+      let ringPop = Math.round(basePop * (b + 1) * 1.4);
+      cityFeatures.push({
+        type: "Feature",
+        properties: {
+          city: c.code,
+          band: b,
+          from: b * STEP,
+          to: (b + 1) * STEP,
+          pop: ringPop,
+          km2: Math.round(Math.PI * radiusKm * radiusKm / NB)
+        },
+        geometry: { type: "Polygon", coordinates: [coords] }
+      });
+    }
+  });
+
+  const cityGeoJSON = { type: "FeatureCollection", features: cityFeatures };
+
+  function cStyle(f) {
+    const p = f.properties;
+    const on = p.to <= state.T && (!state.city || p.city === state.city);
+    return { fillColor: col(p.band), fillOpacity: on ? 0.45 : 0.03, stroke: on, color: '#fff', weight: 0.5, opacity: 0.6 };
+  }
+
+  const cGeo = L.geoJSON(cityGeoJSON, {
+    style: cStyle,
+    onEachFeature: (f, layer) => {
+      layer.on('mouseover', () => {
+        const p = f.properties;
+        layer.setStyle({ weight: 2, color: '#0b2545', opacity: 1 });
+        layer.bringToFront();
+        document.getElementById('info').innerHTML = '<div class="t">' + cityName[p.city] + '</div>' +
+          '<div class="big">' + p.from + '–' + p.to + ' min</div>' +
+          '<div class="m">' + fmt(p.pop) + ' people weighted · ' + fmt(p.km2) + ' km² (Roads VIT & A7 90km/h)</div>';
+      });
+      layer.on('mouseout', () => cGeo.resetStyle(layer));
+    }
+  });
+
+  const cMarkers = {};
+  citiesList.forEach(c => {
+    const m = L.marker(c.coords, {
+      icon: L.divIcon({ className: '', html: '<div class="apin" id="cpin-' + c.code + '">📍</div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+      zIndexOffset: 1000
+    });
+    m.bindTooltip(c.name, { permanent: true, direction: 'right', offset: [12, 0], className: 'aplabel' });
+    m.on('click', () => { state.city = state.city === c.code ? null : c.code; cRefresh(); });
+    cMarkers[c.code] = m;
+  });
+
+  const cityLayerGroup = L.layerGroup([cGeo].concat(Object.values(cMarkers)));
+  const $ = id => document.getElementById(id);
+
+  function cRefresh() {
+    cGeo.setStyle(cStyle);
+    $('c-tval').textContent = state.T;
+    const sel = cityGeoJSON.features.filter(f => !state.city || f.properties.city === state.city).map(f => f.properties);
+    const inT = sel.filter(p => p.to <= state.T);
+    const pop = inT.reduce((s, p) => s + p.pop, 0), km2 = inT.reduce((s, p) => s + p.km2, 0);
+    $('c-s-pop').textContent = fmt(pop);
+    $('c-s-km2').textContent = fmt(km2);
+
+    const byBand = Array(NB).fill(0);
+    sel.forEach(p => byBand[p.band] += p.pop);
+    $('c-legend').innerHTML = '<div class="hd"><span>Timp (min)</span><span>populație ponderată</span></div>' +
+      byBand.map((v, b) => '<div class="it' + ((b + 1) * STEP > state.T ? ' off' : '') + '"><span class="sw" style="background:' + col(b) +
+        '"></span>' + lbl(b) + '<span class="n">' + fmt(v) + '</span></div>').join('');
+    $('c-sel').style.display = state.city ? 'block' : 'none';
+    $('c-sel-t').textContent = state.city ? cityName[state.city] : '';
+    Object.keys(cMarkers).forEach(k => { const el = $('cpin-' + k); if (el) el.classList.toggle('sel', state.city === k); });
+  }
+
+  $('c-clear').onclick = () => { state.city = null; cRefresh(); };
+  $('c-slider').addEventListener('input', e => { state.T = +e.target.value; cRefresh(); });
+
+  let cTimer = null;
+  function cStop() { clearInterval(cTimer); cTimer = null; $('c-play').textContent = '▶'; }
+  $('c-play').onclick = () => {
+    if (cTimer) return cStop();
+    state.T = STEP; $('c-slider').value = state.T; cRefresh();
+    $('c-play').textContent = '❚❚';
+    cTimer = setInterval(() => {
+      if (state.T >= MAX_T) return cStop();
+      state.T += STEP; $('c-slider').value = state.T; cRefresh();
+    }, 700);
+  };
+
+  $('c-slider').max = MAX_T; $('c-slider').value = state.T;
+  cRefresh();
+
+  $('cityacc').addEventListener('toggle', function () {
+    if (this.open) {
+      cityLayerGroup.addTo(map);
+      document.getElementById('info').style.display = '';
+    } else {
+      map.removeLayer(cityLayerGroup);
+      document.getElementById('info').style.display = 'none';
+      cStop(); state.city = null; state.T = MAX_T;
+      $('c-slider').value = state.T; cRefresh();
+    }
+  });
+})();
+</script>
+
+<!-- ===================== ROADS LAYER ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap;
+  if (!map || !window.M2_OUTLINE) return;
+  const G = { lon0: 24.4, lat0: 43.3, lon1: 30.2, lat1: 48.8, step: 0.025 };
+  G.nx = Math.ceil((G.lon1 - G.lon0) / G.step);
+  G.ny = Math.ceil((G.lat1 - G.lat0) / G.step);
+  const KY = 110.57, kx = lat => 111.32 * Math.cos(lat * Math.PI / 180);
+  const CLS = {
+    motorway: { name: 'Autostrăzi',  color: '#d62828', weight: 3.5 },
+    euro:     { name: 'Drumuri E',    color: '#f77f00', weight: 2.5 },
+    county:   { name: 'Județene (DJ)', color: '#6a4c93', weight: 1.2 }
+  };
+  const BB = [G.lat0, G.lon0, G.lat1, G.lon1].join(',');
+  const HW = '"highway"~"^(trunk|primary|secondary|tertiary)$"';
+  const Q = {
+    motorway: 'way["highway"="motorway"](' + BB + ');',
+    euro: 'way[' + HW + ']["int_ref"~"(^|;)E ?[0-9]"](' + BB + ');way[' + HW + ']["ref"~"(^|;)E ?[0-9]"](' + BB + ');',
+    county: 'way["highway"]["ref"~"^DJ ?[0-9]"](' + BB + ');'
+  };
+  const EP = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  const data = {}, layers = {}, shown = new Set();
+  const $ = id => document.getElementById(id);
+
+  map.createPane('rsurf').style.zIndex = 410;
+  map.createPane('roads').style.zIndex = 420;
+  map.getPane('rsurf').style.pointerEvents = 'none';
+  map.getPane('roads').style.pointerEvents = 'none';
+
+  async function fetchClass(c) {
+    const body = 'data=' + encodeURIComponent('[out:json][timeout:120];(' + Q[c] + ');out geom qt;');
+    let last;
+    for (const ep of EP) {
+      try {
+        const r = await fetch(ep, { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        return j.elements.filter(e => e.type === 'way' && e.geometry).map(e => ({ g: e.geometry.map(p => [p.lat, p.lon]) }));
+      } catch (e) { last = e; }
+    }
+    throw last;
+  }
+
+  async function toggle(c, cb) {
+    const status = $('rstatus');
+    if (cb.checked) {
+      if (!data[c]) {
+        status.textContent = 'Se încarcă ' + CLS[c].name + ' din OSM…';
+        cb.disabled = true;
+        try { data[c] = await fetchClass(c); }
+        catch (e) { status.textContent = 'Eroare la încărcare.'; cb.checked = false; cb.disabled = false; return; }
+        cb.disabled = false;
+        status.textContent = '';
+        layers[c] = L.polyline(data[c].map(w => w.g), { pane: 'roads', color: CLS[c].color, weight: CLS[c].weight, opacity: .9, interactive: false });
+      }
+      if (cb.checked) { layers[c].addTo(map); shown.add(c); }
+    } else {
+      if (layers[c]) map.removeLayer(layers[c]);
+      shown.delete(c);
+    }
+  }
+
+  document.querySelectorAll('#roads input[data-cls]').forEach(cb => cb.addEventListener('change', () => toggle(cb.dataset.cls, cb)));
+})();
+</script>
+</body>
+</html>
