@@ -90,11 +90,14 @@
       <div id="legend"></div>
 
       <div class="note">
-        Click an airport to isolate its bands. <b>Solid</b> areas use measured drive times to the nearest
-        airport (bands interpolated from 3,186 locality centroids, typical error ≈ 5 min). <b>Lighter dashed</b>
-        areas were closer to an airport left out of this set; their times are <b>estimated</b> by extending the
-        measured times outward at 1.5 min per km of straight-line distance (typical error ≈ 10–15 min, larger
-        far from measured data; rivers and mountains are not modelled). Population: 2021 1 km grid.
+        <div class="note">
+  Click an airport to isolate its bands. The analysis covers <b>Macroregiunea 2 only</b>, using the four
+  M2 airports. <b>Solid</b> areas use measured drive times to the nearest M2 airport (bands interpolated
+  from locality centroids, typical error ≈ 5 min). <b>Lighter dashed</b> areas were closer to an airport
+  outside M2 (Bucharest, Brașov…) or to the private Tulcea airfield; their times are <b>estimated</b> by
+  extending the measured times outward at 1.5 min per km of straight-line distance (typical error ≈ 10–15 min,
+  larger far from measured data; rivers and mountains are not modelled). Population: 2021 1 km grid.
+</div>
       </div>
     </div>
   </details>
@@ -126,10 +129,9 @@
 
 <!-- ===================== DATA (files in /assets/m2) ===================== -->
 <script>window.ISO_META = {"step": 15, "bands": 15, "totalPop": 5588104};</script>
-<script src="assets/m2/isochrones4.js"></script>          <!-- window.ISO={...};  isochrone bands -->
-<script src="assets/m2/m2_outline.js"></script>   <!-- window.M2_OUTLINE={...};  dissolved UAT outline -->
+<script src="assets/m2/isochrones.js"></script>          <!-- defines window.ISO, ISO_META, AIRPORTS, M2_OUTLINE -->
 <script>
-window.AIRPORTS={"type":"FeatureCollection","features":[{"type":"Feature","properties":{"code":"BCM","name":"Bacău George Enescu","uats":314},"geometry":{"type":"Point","coordinates":[26.9103,46.5219]}},{"type":"Feature","properties":{"code":"SCV","name":"Suceava Ștefan cel Mare","uats":217},"geometry":{"type":"Point","coordinates":[26.3541,47.6875]}},{"type":"Feature","properties":{"code":"IAS","name":"Iași International","uats":143},"geometry":{"type":"Point","coordinates":[27.6206,47.1785]}},{"type":"Feature","properties":{"code":"CND","name":"Mihail Kogălniceanu International","uats":100},"geometry":{"type":"Point","coordinates":[28.4883,44.3622]}}]};
+window.AIRPORTS=window.AIRPORTS||{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"code":"BCM","name":"Bacău George Enescu","uats":314},"geometry":{"type":"Point","coordinates":[26.9103,46.5219]}},{"type":"Feature","properties":{"code":"SCV","name":"Suceava Ștefan cel Mare","uats":217},"geometry":{"type":"Point","coordinates":[26.3541,47.6875]}},{"type":"Feature","properties":{"code":"IAS","name":"Iași International","uats":143},"geometry":{"type":"Point","coordinates":[27.6206,47.1785]}},{"type":"Feature","properties":{"code":"CND","name":"Mihail Kogălniceanu International","uats":100},"geometry":{"type":"Point","coordinates":[28.4883,44.3622]}}]};
 </script>
 
 <!-- ===================== MAIN: map, basemaps, airports ===================== -->
@@ -137,7 +139,7 @@ window.AIRPORTS={"type":"FeatureCollection","features":[{"type":"Feature","prope
 (function () {
   if (!window.ISO || !window.M2_OUTLINE) {
     document.body.insertAdjacentHTML('beforeend',
-      '<div class="panel" style="left:14px;top:14px;padding:12px 16px;font-size:13px">Data missing: <b>' + [!window.ISO && 'window.ISO (assets/m2/isochrones4.js)', !window.M2_OUTLINE && 'window.M2_OUTLINE (assets/m2/m2_outline.js)'].filter(Boolean).join(' and ') + '</b> not found. Check the file is in assets/m2/ and that it starts with that variable name.</div>');
+      '<div class="panel" style="left:14px;top:14px;padding:12px 16px;font-size:13px">Data missing: <b>' + [!window.ISO && 'window.ISO (assets/m2/isochrones.js)', !window.M2_OUTLINE && 'window.M2_OUTLINE (assets/m2/isochrones.js)'].filter(Boolean).join(' and ') + '</b> not found. Check the file is in assets/m2/ and that it starts with that variable name.</div>');
     return;
   }
   const ISO = window.ISO, META = window.ISO_META, STEP = META.step, NB = META.bands;
