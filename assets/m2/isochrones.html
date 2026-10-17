@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airport isochrones · Macroregiunea 2</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+  :root { --navy:#0b2545; --teal:#2a9d8f; --ink:#1d2b3a; --muted:#64748b; --panel:rgba(255,255,255,.95); --line:#e2e8f0; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); }
+  #map { position:absolute; inset:0; background:#eef2f5; }
+  .panel { position:absolute; z-index:1000; background:var(--panel); border-radius:12px; box-shadow:0 4px 18px rgba(11,37,69,.18); backdrop-filter:blur(4px); }
+  #controls { top:14px; right:14px; width:320px; padding:16px 18px; max-height:calc(100% - 28px); overflow:auto; }
+  #controls h1 { font-size:16px; margin:0 0 2px; color:var(--navy); }
+  #controls .sub { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .lbl { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:4px; }
+  .lbl b { font-size:15px; color:var(--navy); }
+  .row { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+  input[type=range] { flex:1; accent-color:var(--teal); }
+  #play { width:34px; height:34px; border-radius:50%; border:0; background:var(--teal); color:#fff; font-size:13px; cursor:pointer; flex:none; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .stat { background:#f6f8fa; border-radius:8px; padding:8px 10px; }
+  .stat .v { font-size:18px; font-weight:600; color:var(--navy); }
+  .stat .k { font-size:11px; color:var(--muted); }
+  #legend { font-size:12px; }
+  #legend .hd { display:flex; color:var(--muted); font-size:11px; margin-bottom:2px; }
+  #legend .hd span:last-child { margin-left:auto; }
+  #legend .it { display:flex; align-items:center; gap:8px; padding:2px 0; }
+  #legend .sw { width:22px; height:12px; border-radius:2px; flex:none; }
+  #legend .it.off { opacity:.35; }
+  #legend .n { margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums; }
+  #sel { display:none; margin:0 0 10px; font-size:12px; background:#e6f4f1; border-radius:8px; padding:6px 10px; }
+  #sel button { float:right; border:0; background:none; cursor:pointer; color:var(--navy); font-size:12px; }
+  .note { margin-top:12px; font-size:11px; color:var(--muted); line-height:1.4; border-top:1px solid var(--line); padding-top:8px; }
+  #info { left:14px; bottom:24px; padding:10px 14px; font-size:12.5px; min-width:220px; }
+  #info .t { font-weight:600; color:var(--navy); font-size:14px; }
+  #info .m { color:var(--muted); }
+  #info .big { font-size:20px; font-weight:600; color:var(--navy); }
+  .apin { width:26px; height:26px; border-radius:50%; background:var(--navy); color:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 1px 5px rgba(0,0,0,.45); }
+  .apin.sel { background:var(--teal); transform:scale(1.25); }
+  .aplabel { background:rgba(255,255,255,.92); border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); font-weight:600; font-size:11px; color:var(--navy); padding:1px 5px; }
+  @media (max-width:640px) {
+    #controls { top:auto; bottom:0; right:0; left:0; width:100%; border-radius:14px 14px 0 0; max-height:50%; }
+    #info { display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="controls" class="panel">
+  <h1>Airport isochrones ✧ Macroregiunea 2</h1>
+  <div class="sub">15-minute drive-time bands around the nearest airport</div>
+
+  <div id="sel"><button id="clear">✕ clear</button><span id="sel-t"></span></div>
+
+  <div class="lbl"><span>Show bands up to</span><b><span id="tval">210</span> min</b></div>
+  <div class="row">
+    <button id="play" title="Play">▶</button>
+    <input id="slider" type="range" min="15" max="210" step="15" value="210">
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v" id="s-pop">–</div><div class="k">of M2 population within reach</div></div>
+    <div class="stat"><div class="v" id="s-km2">–</div><div class="k">km² within reach</div></div>
+  </div>
+
+  <div id="legend"></div>
+
+  <div class="note">
+    Click an airport to isolate its bands. Each band covers only the area where that airport is the
+    <i>nearest</i> one. Bands are interpolated from drive times at 3,186 locality centroids (typical error
+    ≈ 5 min, so edges are indicative); population from the 2021 1 km grid.
+  </div>
+</div>
+
+<div id="info" class="panel"><span class="m">Hover over a band</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="data/isochrones.js"></script>
+<script src="data/airports.js"></script>
+<script>
+(function () {
+  const ISO = window.ISO, META = window.ISO_META, STEP = META.step, NB = META.bands;
+  const COLORS = ['#0b2545','#103a68','#13518a','#1f7a8c','#2a9d8f','#6dbb8a','#a8c97f',
+                  '#e9c46a','#f0b25e','#f4a261','#ef8a56','#e76f51','#c8553d','#8f2d2a'];
+  const col = b => COLORS[Math.min(b, COLORS.length - 1)];
+  const lbl = b => (b * STEP) + '–' + ((b + 1) * STEP);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const apName = {}; window.AIRPORTS.features.forEach(a => apName[a.properties.code] = a.properties.name);
+
+  const state = { T: NB * STEP, ap: null };
+
+  const map = L.map('map', { preferCanvas: true, zoomSnap: 0.25 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 14 }).addTo(map);
+
+  function style(f) {
+    const p = f.properties;
+    const on = p.to <= state.T && (!state.ap || p.ap === state.ap);
+    return { fillColor: col(p.band), fillOpacity: on ? 0.8 : 0.04, stroke: on, color: '#fff', weight: 0.5, opacity: 0.6 };
+  }
+
+  const info = document.getElementById('info');
+  const geo = L.geoJSON(ISO, {
+    style,
+    onEachFeature: (f, layer) => {
+      layer.on('mouseover', () => {
+        const p = f.properties;
+        layer.setStyle({ weight: 2, color: '#0b2545', opacity: 1 });
+        layer.bringToFront();
+        info.innerHTML = '<div class="t">' + (apName[p.ap] || p.ap) + '</div>' +
+          '<div class="big">' + p.from + '–' + p.to + ' min</div>' +
+          '<div class="m">' + fmt(p.pop) + ' people · ' + fmt(p.km2) + ' km²</div>';
+      });
+      layer.on('mouseout', () => geo.resetStyle(layer));
+    }
+  }).addTo(map);
+
+  // M2 outline on top of the bands
+  const outline = L.geoJSON(window.M2_OUTLINE, { style: { fill: false, color: '#0b2545', weight: 1.4, opacity: .9 }, interactive: false }).addTo(map);
+  map.fitBounds(outline.getBounds(), { padding: [20, 20] });
+
+  // airports = centres (only those that have bands in M2)
+  const used = new Set(ISO.features.map(f => f.properties.ap));
+  const markers = {};
+  window.AIRPORTS.features.forEach(a => {
+    const p = a.properties; if (!used.has(p.code)) return;
+    const m = L.marker([a.geometry.coordinates[1], a.geometry.coordinates[0]], {
+      icon: L.divIcon({ className: '', html: '<div class="apin" id="pin-' + p.code + '">✈</div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+      zIndexOffset: 1000 }).addTo(map);
+    m.bindTooltip(p.code, { permanent: true, direction: 'right', offset: [12, 0], className: 'aplabel' });
+    m.on('click', () => { state.ap = state.ap === p.code ? null : p.code; refresh(); });
+    markers[p.code] = m;
+  });
+
+  const $ = id => document.getElementById(id);
+
+  function refresh() {
+    geo.setStyle(style);
+    $('tval').textContent = state.T;
+    // stats (selection-aware)
+    const sel = ISO.features.filter(f => !state.ap || f.properties.ap === state.ap).map(f => f.properties);
+    const inT = sel.filter(p => p.to <= state.T);
+    const pop = inT.reduce((s, p) => s + p.pop, 0), km2 = inT.reduce((s, p) => s + p.km2, 0);
+    $('s-pop').textContent = (100 * pop / META.totalPop).toFixed(1) + '%';
+    $('s-km2').textContent = fmt(km2);
+    // legend: population per band
+    const byBand = Array(NB).fill(0);
+    sel.forEach(p => byBand[p.band] += p.pop);
+    $('legend').innerHTML = '<div class="hd"><span>Drive time (min)</span><span>people</span></div>' +
+      byBand.map((v, b) => '<div class="it' + ((b + 1) * STEP > state.T ? ' off' : '') + '"><span class="sw" style="background:' + col(b) +
+        '"></span>' + lbl(b) + '<span class="n">' + fmt(v) + '</span></div>').join('');
+    // selection chip + marker highlight
+    $('sel').style.display = state.ap ? 'block' : 'none';
+    $('sel-t').textContent = state.ap ? (apName[state.ap] || state.ap) : '';
+    Object.keys(markers).forEach(k => { const el = document.getElementById('pin-' + k); if (el) el.classList.toggle('sel', state.ap === k); });
+  }
+
+  $('clear').onclick = () => { state.ap = null; refresh(); };
+  $('slider').addEventListener('input', e => { state.T = +e.target.value; refresh(); });
+
+  // play: bands appear ring by ring, 15 min at a time
+  let timer = null;
+  function stop() { clearInterval(timer); timer = null; $('play').textContent = '▶'; }
+  $('play').onclick = () => {
+    if (timer) return stop();
+    state.T = STEP; $('slider').value = state.T; refresh();
+    $('play').textContent = '❚❚';
+    timer = setInterval(() => {
+      if (state.T >= NB * STEP) return stop();
+      state.T += STEP; $('slider').value = state.T; refresh();
+    }, 700);
+  };
+
+  $('slider').max = NB * STEP; $('slider').value = state.T;
+  refresh();
+})();
+</script>
+</body>
+</html>
