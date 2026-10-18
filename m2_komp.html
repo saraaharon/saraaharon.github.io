@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sara AHARON</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+  :root { --navy:#0b2545; --teal:#2a9d8f; --ink:#1d2b3a; --muted:#64748b; --panel:rgba(255,255,255,.95); --line:#e2e8f0; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); }
+  #map { position:absolute; inset:0; background:#eef2f5; }
+  .panel { position:absolute; z-index:1000; background:var(--panel); border-radius:12px; box-shadow:0 4px 18px rgba(11,37,69,.18); backdrop-filter:blur(4px); }
+  #controls { top:14px; right:14px; width:320px; padding:16px 18px; max-height:calc(100% - 28px); overflow:auto; }
+  #controls h1 { font-size:16px; margin:0 0 2px; color:var(--navy); }
+  #controls .sub { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .lbl { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:4px; }
+  .lbl b { font-size:15px; color:var(--navy); }
+  .row { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+  input[type=range] { flex:1; accent-color:var(--teal); }
+  #play { width:34px; height:34px; border-radius:50%; border:0; background:var(--teal); color:#fff; font-size:13px; cursor:pointer; flex:none; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .stat { background:#f6f8fa; border-radius:8px; padding:8px 10px; }
+  .stat .v { font-size:18px; font-weight:600; color:var(--navy); }
+  .stat .k { font-size:11px; color:var(--muted); }
+  #legend { font-size:12px; }
+  #legend .hd { display:flex; color:var(--muted); font-size:11px; margin-bottom:2px; }
+  #legend .hd span:last-child { margin-left:auto; }
+  #legend .it { display:flex; align-items:center; gap:8px; padding:2px 0; }
+  #legend .sw { width:22px; height:12px; border-radius:2px; flex:none; }
+  #legend .it.off { opacity:.35; }
+  #legend .n { margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums; }
+  #sel { display:none; margin:0 0 10px; font-size:12px; background:#e6f4f1; border-radius:8px; padding:6px 10px; }
+  #sel button { float:right; border:0; background:none; cursor:pointer; color:var(--navy); font-size:12px; }
+  .note { margin-top:12px; font-size:11px; color:var(--muted); line-height:1.4; border-top:1px solid var(--line); padding-top:8px; }
+  #info { left:14px; bottom:24px; padding:10px 14px; font-size:12.5px; min-width:220px; display:none; }
+  #info .t { font-weight:600; color:var(--navy); font-size:14px; }
+  #info .m { color:var(--muted); }
+  #info .big { font-size:20px; font-weight:600; color:var(--navy); }
+  .apin { width:26px; height:26px; border-radius:50%; background:var(--navy); color:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 1px 5px rgba(0,0,0,.45); }
+  .apin.sel { background:var(--teal); transform:scale(1.25); }
+  .aplabel { background:rgba(255,255,255,.92); border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); font-weight:600; font-size:11px; color:var(--navy); padding:1px 5px; }
+
+  /* accordion boxes */
+  details.box { margin-top:12px; border-top:1px solid var(--line); padding-top:8px; }
+  details.box:first-of-type { margin-top:0; border-top:0; padding-top:0; }
+  details.box summary { cursor:pointer; font-weight:600; font-size:14px; color:var(--navy); }
+  .rrow { display:flex; align-items:center; gap:8px; font-size:12.5px; padding:3px 0; cursor:pointer; }
+  .rsw { width:22px; height:4px; border-radius:2px; flex:none; }
+  table.rt { width:100%; border-collapse:collapse; font-size:11.5px; margin:8px 0 4px; }
+  table.rt th { text-align:right; font-weight:500; color:var(--muted); padding:2px 0; }
+  table.rt th:first-child, table.rt td:first-child { text-align:left; }
+  table.rt td { text-align:right; padding:2px 0; font-variant-numeric:tabular-nums; }
+  #rstatus { font-size:11.5px; color:#b45309; min-height:14px; }
+  .pix { image-rendering:pixelated; }
+
+  /* Huff / attraction centers */
+  #hsel { width:100%; padding:6px 8px; font-size:12.5px; margin:8px 0 6px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+  #hinfo { font-size:12.5px; margin:8px 0 6px; line-height:1.4; }
+  #hinfo b { color:var(--navy); }
+  #hleg .hd { color:var(--muted); font-size:11px; margin:8px 0 2px; }
+  #hleg .it { display:flex; align-items:center; gap:8px; padding:2px 0; font-size:12px; }
+  #hleg .sw { width:22px; height:12px; border-radius:2px; flex:none; border:1px solid rgba(0,0,0,.2); }
+  .hlabel { background:rgba(255,255,255,.92); border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); font-weight:600; font-size:11px; color:var(--navy); padding:1px 5px; }
+
+  @media (max-width:640px) {
+    #controls { top:auto; bottom:0; right:0; left:0; width:100%; border-radius:14px 14px 0 0; max-height:50%; }
+    #info { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="controls" class="panel">
+  <h1>Macroregiunea 2</h1>
+  <div class="sub">Open a section to activate its layer · each section is an independent analysis</div>
+
+  <!-- ============ 1. AIRPORTS ============ -->
+  <details id="air" class="box">
+    <summary>Airport isochrones</summary>
+    <div style="margin-top:8px">
+      <div class="sub">15-minute drive-time bands · Suceava, Iași, Bacău, Constanța airports</div>
+
+      <div id="sel"><button id="clear">✕ clear</button><span id="sel-t"></span></div>
+
+      <div class="lbl"><span>Show bands up to</span><b><span id="tval">210</span> min</b></div>
+      <div class="row">
+        <button id="play" title="Play">▶</button>
+        <input id="slider" type="range" min="15" max="210" step="15" value="210">
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="v" id="s-pop">–</div><div class="k">of M2 population within reach</div></div>
+        <div class="stat"><div class="v" id="s-km2">–</div><div class="k">km² within reach</div></div>
+      </div>
+
+      <div class="k" id="s-est" style="font-size:11px;color:#64748b;margin:-6px 0 10px"></div>
+      <div id="legend"></div>
+
+      <div class="note">
+        <div class="note">
+  Click an airport to isolate its bands. The analysis covers <b>Macroregiunea 2 only</b>, using the four
+  M2 airports. <b>Solid</b> areas use measured drive times to the nearest M2 airport (bands interpolated
+  from locality centroids, typical error ≈ 5 min). <b>Lighter dashed</b> areas were closer to an airport
+  outside M2 (Bucharest, Brașov…) or to the private Tulcea airfield; their times are <b>estimated</b> by
+  extending the measured times outward at 1.5 min per km of straight-line distance (typical error ≈ 10–15 min,
+  larger far from measured data; rivers and mountains are not modelled). Population: 2021 1 km grid.
+</div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ 2. ROADS ============ -->
+  <details id="roads" class="box">
+    <summary>Road network ✧ access to Western Europe</summary>
+    <div style="margin-top:8px">
+      <label class="rrow"><input type="checkbox" data-cls="motorway"><span class="rsw" style="background:#d62828"></span>Motorways (A)</label>
+      <label class="rrow"><input type="checkbox" data-cls="euro"><span class="rsw" style="background:#f77f00"></span>European roads (E)</label>
+      <label class="rrow"><input type="checkbox" data-cls="county"><span class="rsw" style="background:#6a4c93"></span>County roads (DJ)</label>
+      <label class="rrow" style="margin-top:6px"><input type="checkbox" id="rsurf">Distance-to-road surface (deficit map)</label>
+      <div id="rstatus"></div>
+      <div id="rstat"></div>
+      <div class="note">
+        Source: OpenStreetMap via Overpass (loaded on tick; county roads are heavy, give them a minute).
+        Lengths are counted inside the M2 outline only. The <b>deficit map</b> shows distance to the nearest ticked
+        road class on a ~2.5 km grid (≈ ±3 km): <span style="color:#2a9d8f">■</span> ≤15 km
+        <span style="color:#a8c97f">■</span> ≤30 <span style="color:#f4a261">■</span> ≤60
+        <span style="color:#c8553d">■</span> &gt;60 km. E-roads are detected from <code>int_ref</code>/<code>ref</code> tags.
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ 3. ATTRACTION CENTERS (HUFF) ============ -->
+  <details id="huff" class="box">
+    <summary>Attraction centers ✧ Huff model</summary>
+    <div style="margin-top:8px">
+      <div class="sub">942 localities · each coloured by the Huff probability of being drawn to its main centre</div>
+      <select id="hsel"></select>
+      <label class="rrow"><input type="checkbox" id="harea" checked>Area of influence</label>
+      <label class="rrow"><input type="checkbox" id="hlines">Links to the centre</label>
+      <div id="hinfo"></div>
+      <div id="hleg"></div>
+      <div class="note">
+        Data: <code>huff70.json</code> (Huff gravity model). Colour = <b>PROB_MAX</b>, the highest probability of a
+        locality choosing one destination (7 quantile classes, shared by all centres so they can be compared).
+        Click a centre on the map to isolate its catchment.
+      </div>
+    </div>
+  </details>
+</div>
+
+<div id="info" class="panel"><span class="m">Hover over a band</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<!-- ===================== DATA (files in /assets/m2) ===================== -->
+<script>window.ISO_META = {"step": 15, "bands": 15, "totalPop": 5588104};</script>
+<script src="assets/m2/isochrones.js"></script>          <!-- defines window.ISO, ISO_META, AIRPORTS, M2_OUTLINE -->
+<script src="assets/m2/huff.js"></script>               <!-- defines window.HUFF (Huff attraction centers) -->
+<script>
+window.AIRPORTS=window.AIRPORTS||{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"code":"BCM","name":"Bacău George Enescu","uats":314},"geometry":{"type":"Point","coordinates":[26.9103,46.5219]}},{"type":"Feature","properties":{"code":"SCV","name":"Suceava Ștefan cel Mare","uats":217},"geometry":{"type":"Point","coordinates":[26.3541,47.6875]}},{"type":"Feature","properties":{"code":"IAS","name":"Iași International","uats":143},"geometry":{"type":"Point","coordinates":[27.6206,47.1785]}},{"type":"Feature","properties":{"code":"CND","name":"Mihail Kogălniceanu International","uats":100},"geometry":{"type":"Point","coordinates":[28.4883,44.3622]}}]};
+</script>
+
+<!-- ===================== MAIN: map, basemaps, airports ===================== -->
+<script>
+(function () {
+  if (!window.ISO || !window.M2_OUTLINE) {
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="panel" style="left:14px;top:14px;padding:12px 16px;font-size:13px">Data missing: <b>' + [!window.ISO && 'window.ISO (assets/m2/isochrones.js)', !window.M2_OUTLINE && 'window.M2_OUTLINE (assets/m2/isochrones.js)'].filter(Boolean).join(' and ') + '</b> not found. Check the file is in assets/m2/ and that it starts with that variable name.</div>');
+    return;
+  }
+  const ISO = window.ISO, META = window.ISO_META, STEP = META.step, NB = META.bands;
+  const COLORS = ['#0b2545','#103a68','#13518a','#1f7a8c','#2a9d8f','#6dbb8a','#a8c97f',
+                  '#e9c46a','#f0b25e','#f4a261','#ef8a56','#e76f51','#c8553d','#8f2d2a'];
+  const col = b => COLORS[Math.min(b, COLORS.length - 1)];
+  const lbl = b => (b * STEP) + '–' + ((b + 1) * STEP);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const apName = {}; window.AIRPORTS.features.forEach(a => apName[a.properties.code] = a.properties.name);
+
+  const state = { T: NB * STEP, ap: null };
+
+  const map = L.map('map', { preferCanvas: true, zoomSnap: 0.25 });
+  window.leafletMap = map;
+
+  // ---- basemaps (Esri tiles need no key) ----
+  map.createPane('labels'); map.getPane('labels').style.zIndex = 450; map.getPane('labels').style.pointerEvents = 'none';
+  map.createPane('m2');     map.getPane('m2').style.zIndex = 430;     map.getPane('m2').style.pointerEvents = 'none';
+  const esri = (svc, o) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + svc + '/MapServer/tile/{z}/{y}/{x}',
+    Object.assign({ attribution: 'Tiles &copy; Esri', maxZoom: 16 }, o || {}));
+  const gray = L.layerGroup([esri('Canvas/World_Light_Gray_Base'), esri('Canvas/World_Light_Gray_Reference', { pane: 'labels' })]);
+  const streets = esri('World_Street_Map');
+  const imagery = L.layerGroup([esri('World_Imagery'), esri('Reference/World_Boundaries_and_Places', { pane: 'labels' })]);
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 });
+  const topo = esri('World_Topo_Map');
+  const roadsRef = esri('Reference/World_Transportation', { pane: 'labels' }); // draws above the analysis layers
+  topo.addTo(map);
+  roadsRef.addTo(map);
+  L.control.layers(
+    { 'Esri Topo': topo, 'Light gray': gray, 'Streets': streets, 'Satellite': imagery, 'OpenStreetMap': osm },
+    { 'Esri roads & transportation': roadsRef },
+    { position: 'topleft', collapsed: true }).addTo(map);
+
+  // ---- isochrone bands (50% transparency) ----
+  function style(f) {
+    const p = f.properties;
+    const on = p.to <= state.T && (!state.ap || p.ap === state.ap);
+    return { fillColor: col(p.band), fillOpacity: on ? (p.est ? 0.25 : 0.5) : 0.04, stroke: on, color: p.est ? '#475569' : '#fff', weight: 0.5, opacity: 0.6, dashArray: p.est ? '3 3' : null };
+  }
+
+  const info = document.getElementById('info');
+  const geo = L.geoJSON(ISO, {
+    style,
+    onEachFeature: (f, layer) => {
+      layer.on('mouseover', () => {
+        const p = f.properties;
+        layer.setStyle({ weight: 2, color: '#0b2545', opacity: 1 });
+        layer.bringToFront();
+        info.innerHTML = '<div class="t">' + (apName[p.ap] || p.ap) + '</div>' +
+          '<div class="big">' + p.from + '–' + p.to + ' min</div>' +
+          '<div class="m">' + fmt(p.pop) + ' people · ' + fmt(p.km2) + ' km²</div>' +
+          (p.est ? '<div class="m"><i>estimated (nearest airport was removed)</i></div>' : '<div class="m"><i>measured</i></div>');
+      });
+      layer.on('mouseout', () => geo.resetStyle(layer));
+    }
+  });   // NOT added to the map: it appears when the Airport section is opened
+
+  // ---- M2 outline: the only layer that is always on ----
+  const outline = L.geoJSON(window.M2_OUTLINE, { pane: 'm2', style: { fill: false, color: '#0b2545', weight: 1.6, opacity: .95 }, interactive: false }).addTo(map);
+  map.fitBounds(outline.getBounds(), { padding: [20, 20] });
+
+  // ---- airport markers (also only while the section is open) ----
+  const used = new Set(ISO.features.map(f => f.properties.ap));
+  const markers = {};
+  window.AIRPORTS.features.forEach(a => {
+    const p = a.properties; if (!used.has(p.code)) return;
+    const m = L.marker([a.geometry.coordinates[1], a.geometry.coordinates[0]], {
+      icon: L.divIcon({ className: '', html: '<div class="apin" id="pin-' + p.code + '">✈</div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+      zIndexOffset: 1000 });
+    m.bindTooltip(p.code, { permanent: true, direction: 'right', offset: [12, 0], className: 'aplabel' });
+    m.on('click', () => { state.ap = state.ap === p.code ? null : p.code; refresh(); });
+    markers[p.code] = m;
+  });
+  const airLayer = L.layerGroup([geo].concat(Object.values(markers)));
+
+  const $ = id => document.getElementById(id);
+
+  function refresh() {
+    geo.setStyle(style);
+    $('tval').textContent = state.T;
+    const sel = ISO.features.filter(f => !state.ap || f.properties.ap === state.ap).map(f => f.properties);
+    const inT = sel.filter(p => p.to <= state.T);
+    const pop = inT.reduce((s, p) => s + p.pop, 0), km2 = inT.reduce((s, p) => s + p.km2, 0);
+    $('s-pop').textContent = (100 * pop / META.totalPop).toFixed(1) + '%';
+    $('s-km2').textContent = fmt(km2);
+    const ep = inT.filter(p => p.est).reduce((s, p) => s + p.pop, 0);
+    $('s-est').textContent = pop ? 'of which estimated: ' + (100 * ep / pop).toFixed(0) + '%' : '';
+    const byBand = Array(NB).fill(0);
+    sel.forEach(p => byBand[p.band] += p.pop);
+    $('legend').innerHTML = '<div class="hd"><span>Drive time (min)</span><span>people</span></div>' +
+      byBand.map((v, b) => '<div class="it' + ((b + 1) * STEP > state.T ? ' off' : '') + '"><span class="sw" style="background:' + col(b) +
+        '"></span>' + lbl(b) + '<span class="n">' + fmt(v) + '</span></div>').join('') +
+      '<div class="it" style="margin-top:6px"><span class="sw" style="background:#cbd5e1;border:1px dashed #475569"></span>lighter, dashed = estimated</div>';
+    $('sel').style.display = state.ap ? 'block' : 'none';
+    $('sel-t').textContent = state.ap ? (apName[state.ap] || state.ap) : '';
+    Object.keys(markers).forEach(k => { const el = document.getElementById('pin-' + k); if (el) el.classList.toggle('sel', state.ap === k); });
+  }
+
+  $('clear').onclick = () => { state.ap = null; refresh(); };
+  $('slider').addEventListener('input', e => { state.T = +e.target.value; refresh(); });
+
+  let timer = null;
+  function stop() { clearInterval(timer); timer = null; $('play').textContent = '▶'; }
+  $('play').onclick = () => {
+    if (timer) return stop();
+    state.T = STEP; $('slider').value = state.T; refresh();
+    $('play').textContent = '❚❚';
+    timer = setInterval(() => {
+      if (state.T >= NB * STEP) return stop();
+      state.T += STEP; $('slider').value = state.T; refresh();
+    }, 700);
+  };
+
+  $('slider').max = NB * STEP; $('slider').value = state.T;
+  refresh();
+
+  // ---- accordion: open = layer on, close = layer off + reset ----
+  $('air').addEventListener('toggle', function () {
+    if (this.open) {
+      airLayer.addTo(map);
+      info.style.display = '';
+    } else {
+      map.removeLayer(airLayer);
+      info.style.display = 'none';
+      stop(); state.ap = null; state.T = NB * STEP;
+      $('slider').value = state.T; refresh();
+    }
+  });
+})();
+</script>
+
+<!-- ===================== ROADS: OSM via Overpass, M2 analysis ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap;
+  if (!map || !window.M2_OUTLINE) return;
+  const G = { lon0: 24.4, lat0: 43.3, lon1: 30.2, lat1: 48.8, step: 0.025 };
+  G.nx = Math.ceil((G.lon1 - G.lon0) / G.step);
+  G.ny = Math.ceil((G.lat1 - G.lat0) / G.step);
+  const KY = 110.57, kx = lat => 111.32 * Math.cos(lat * Math.PI / 180);
+  const CLS = {
+    motorway: { name: 'Motorways',   color: '#d62828', weight: 3.5 },
+    euro:     { name: 'E-roads',     color: '#f77f00', weight: 2.5 },
+    county:   { name: 'County (DJ)', color: '#6a4c93', weight: 1.2 }
+  };
+  const BB = [G.lat0, G.lon0, G.lat1, G.lon1].join(',');
+  const HW = '"highway"~"^(trunk|primary|secondary|tertiary)$"';
+  const Q = {
+    motorway: 'way["highway"="motorway"](' + BB + ');',
+    euro: 'way[' + HW + ']["int_ref"~"(^|;)E ?[0-9]"](' + BB + ');way[' + HW + ']["ref"~"(^|;)E ?[0-9]"](' + BB + ');',
+    county: 'way["highway"]["ref"~"^DJ ?[0-9]"](' + BB + ');'
+  };
+  const EP = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  const data = {}, layers = {}, shown = new Set();
+  let mask = null, areaKm2 = 0, overlay = null;
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+
+  map.createPane('rsurf').style.zIndex = 410;
+  map.createPane('roads').style.zIndex = 420;
+  map.getPane('rsurf').style.pointerEvents = 'none';
+  map.getPane('roads').style.pointerEvents = 'none';
+
+  const cellIdx = (lon, lat) => {
+    const i = Math.floor((lon - G.lon0) / G.step), j = Math.floor((lat - G.lat0) / G.step);
+    return (i < 0 || j < 0 || i >= G.nx || j >= G.ny) ? -1 : j * G.nx + i;
+  };
+
+  // rasterise the M2 outline once (point-in-polygon per cell)
+  function ensureMask() {
+    if (mask) return;
+    const rings = [];
+    window.M2_OUTLINE.geometry.coordinates.forEach(poly => poly.forEach(r => rings.push(r)));
+    mask = new Uint8Array(G.nx * G.ny);
+    for (let j = 0; j < G.ny; j++) {
+      const lat = G.lat0 + (j + .5) * G.step;
+      for (let i = 0; i < G.nx; i++) {
+        const lon = G.lon0 + (i + .5) * G.step;
+        let inside = false;
+        for (const r of rings) {
+          for (let a = 0, b = r.length - 1; a < r.length; b = a++) {
+            const xa = r[a][0], ya = r[a][1], xb = r[b][0], yb = r[b][1];
+            if ((ya > lat) !== (yb > lat) && lon < (xb - xa) * (lat - ya) / (yb - ya) + xa) inside = !inside;
+          }
+        }
+        if (inside) { mask[j * G.nx + i] = 1; areaKm2 += G.step * kx(lat) * G.step * KY; }
+      }
+    }
+  }
+
+  async function fetchClass(c) {
+    const body = 'data=' + encodeURIComponent('[out:json][timeout:120];(' + Q[c] + ');out geom qt;');
+    let last;
+    for (const ep of EP) {
+      try {
+        const r = await fetch(ep, { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        return j.elements.filter(e => e.type === 'way' && e.geometry).map(e => ({ g: e.geometry.map(p => [p.lat, p.lon]) }));
+      } catch (e) { last = e; }
+    }
+    throw last;
+  }
+
+  function lengthKm(c) {
+    let km = 0;
+    data[c].forEach(w => {
+      for (let k = 1; k < w.g.length; k++) {
+        const a = w.g[k - 1], b = w.g[k];
+        const mlat = (a[0] + b[0]) / 2, mlon = (a[1] + b[1]) / 2;
+        const idx = cellIdx(mlon, mlat);
+        if (idx < 0 || !mask[idx]) continue;
+        km += Math.hypot((b[1] - a[1]) * kx(mlat), (b[0] - a[0]) * KY);
+      }
+    });
+    return km;
+  }
+
+  // two-pass chamfer distance transform (km) from the ticked road classes
+  function distanceGrid() {
+    const D = new Float32Array(G.nx * G.ny).fill(1e9);
+    shown.forEach(c => data[c].forEach(w => {
+      for (let k = 1; k < w.g.length; k++) {
+        const a = w.g[k - 1], b = w.g[k];
+        const n = Math.max(1, Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) / (G.step / 2)));
+        for (let t = 0; t <= n; t++) {
+          const idx = cellIdx(a[1] + (b[1] - a[1]) * t / n, a[0] + (b[0] - a[0]) * t / n);
+          if (idx >= 0) D[idx] = 0;
+        }
+      }
+    }));
+    const dy = G.step * KY, nx = G.nx;
+    for (let j = 0; j < G.ny; j++) {
+      const dx = G.step * kx(G.lat0 + (j + .5) * G.step), dd = Math.hypot(dx, dy);
+      for (let i = 0; i < nx; i++) {
+        const p = j * nx + i; let v = D[p];
+        if (i > 0) v = Math.min(v, D[p - 1] + dx);
+        if (j > 0) {
+          v = Math.min(v, D[p - nx] + dy);
+          if (i > 0) v = Math.min(v, D[p - nx - 1] + dd);
+          if (i < nx - 1) v = Math.min(v, D[p - nx + 1] + dd);
+        }
+        D[p] = v;
+      }
+    }
+    for (let j = G.ny - 1; j >= 0; j--) {
+      const dx = G.step * kx(G.lat0 + (j + .5) * G.step), dd = Math.hypot(dx, dy);
+      for (let i = nx - 1; i >= 0; i--) {
+        const p = j * nx + i; let v = D[p];
+        if (i < nx - 1) v = Math.min(v, D[p + 1] + dx);
+        if (j < G.ny - 1) {
+          v = Math.min(v, D[p + nx] + dy);
+          if (i < nx - 1) v = Math.min(v, D[p + nx + 1] + dd);
+          if (i > 0) v = Math.min(v, D[p + nx - 1] + dd);
+        }
+        D[p] = v;
+      }
+    }
+    return D;
+  }
+
+  const bandRGB = d => d <= 15 ? [42, 157, 143] : d <= 30 ? [168, 201, 127] : d <= 60 ? [244, 162, 97] : [200, 85, 61];
+
+  function update() {
+    ensureMask();
+    const on = Object.keys(CLS).filter(c => shown.has(c));
+    let h = '';
+    if (on.length) {
+      h += '<table class="rt"><tr><th></th><th>km in M2</th><th>km / 1000 km²</th></tr>';
+      on.forEach(c => { const km = lengthKm(c); h += '<tr><td>' + CLS[c].name + '</td><td>' + fmt(km) + '</td><td>' + (1000 * km / areaKm2).toFixed(1) + '</td></tr>'; });
+      h += '</table>';
+    }
+    if (overlay) { map.removeLayer(overlay); overlay = null; }
+    if ($('rsurf').checked) {
+      if (!on.length) { h += '<div class="note" style="border:0;margin:0;padding:0">Tick at least one road class.</div>'; }
+      else {
+        const D = distanceGrid(), cv = document.createElement('canvas');
+        cv.width = G.nx; cv.height = G.ny;
+        const ctx = cv.getContext('2d'), img = ctx.createImageData(G.nx, G.ny);
+        const share = [0, 0, 0]; let tot = 0;
+        for (let j = 0; j < G.ny; j++) {
+          const lat = G.lat0 + (j + .5) * G.step, w = G.step * kx(lat) * G.step * KY;
+          for (let i = 0; i < G.nx; i++) {
+            const p = j * G.nx + i; if (!mask[p]) continue;
+            const d = D[p], c = bandRGB(d), o = ((G.ny - 1 - j) * G.nx + i) * 4;
+            img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+            tot += w; if (d <= 15) share[0] += w; if (d <= 30) share[1] += w; if (d <= 60) share[2] += w;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+        overlay = L.imageOverlay(cv.toDataURL(), [[G.lat0, G.lon0], [G.lat0 + G.ny * G.step, G.lon0 + G.nx * G.step]],
+          { opacity: 0.5, pane: 'rsurf', className: 'pix', interactive: false }).addTo(map);
+        h += '<table class="rt"><tr><th>M2 area within…</th><th>15 km</th><th>30 km</th><th>60 km</th></tr><tr><td>' +
+          on.map(c => CLS[c].name).join(' + ') + '</td>' + share.map(s => '<td>' + (100 * s / tot).toFixed(0) + '%</td>').join('') + '</tr></table>';
+      }
+    }
+    $('rstat').innerHTML = h;
+  }
+
+  async function toggle(c, cb) {
+    const status = $('rstatus');
+    if (cb.checked) {
+      if (!data[c]) {
+        status.textContent = 'Loading ' + CLS[c].name + ' from OpenStreetMap…';
+        cb.disabled = true;
+        try { data[c] = await fetchClass(c); }
+        catch (e) { status.textContent = 'Overpass request failed (' + e.message + '). Try again in a moment.'; cb.checked = false; cb.disabled = false; return; }
+        cb.disabled = false;
+        status.textContent = data[c].length ? '' : 'No ' + CLS[c].name + ' found with the current tags.';
+        layers[c] = L.polyline(data[c].map(w => w.g), { pane: 'roads', color: CLS[c].color, weight: CLS[c].weight, opacity: .9, interactive: false });
+      }
+      if (cb.checked) { layers[c].addTo(map); shown.add(c); }
+    } else {
+      if (layers[c]) map.removeLayer(layers[c]);
+      shown.delete(c);
+    }
+    update();
+  }
+
+  document.querySelectorAll('#roads input[data-cls]').forEach(cb => cb.addEventListener('change', () => toggle(cb.dataset.cls, cb)));
+  $('rsurf').addEventListener('change', update);
+
+  // accordion: open = layers on, close = layers off (ticks and downloaded data are kept)
+  const rbox = $('roads');
+  rbox.addEventListener('toggle', () => {
+    shown.forEach(c => rbox.open ? layers[c].addTo(map) : map.removeLayer(layers[c]));
+    if (overlay) { rbox.open ? overlay.addTo(map) : map.removeLayer(overlay); }
+  });
+})();
+</script>
+
+<!-- ===================== ATTRACTION CENTERS: Huff model ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap, H = window.HUFF;
+  const $ = id => document.getElementById(id);
+  if (!map) return;
+  if (!H) { $('hinfo').innerHTML = '<span style="color:#b45309">Data missing: window.HUFF (assets/m2/huff.js).</span>'; return; }
+
+  const PTS = H.pts, CENTERS = H.centers, byId = {};
+  CENTERS.forEach(c => byId[c.id] = c);
+  const YLORRD = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'];   // ColorBrewer YlOrRd
+  const probs = PTS.map(p => p[5]).sort((a, b) => a - b);
+  const BR = []; for (let i = 1; i < 7; i++) BR.push(probs[Math.floor(i * probs.length / 7)]);
+  const pc = v => (v * 100).toFixed(1) + '%';
+  const colorFor = v => { let i = 0; while (i < BR.length && v >= BR[i]) i++; return YLORRD[i]; };
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+
+  map.createPane('huff'); map.getPane('huff').style.zIndex = 440;
+  const area = L.layerGroup(), lines = L.layerGroup(), pts = L.layerGroup(), cen = L.layerGroup();
+  const layer = L.layerGroup([area, lines, pts, cen]);       // not added: appears when the section is opened
+
+  $('hsel').innerHTML = '<option value="all">All centres (main centre of every locality)</option>' +
+    CENTERS.map(c => '<option value="' + c.id + '">' + c.name + ' (' + c.n + ')</option>').join('') +
+    '<option value="other">Other local centres</option>';
+
+  $('hleg').innerHTML = '<div class="hd">PROB_MAX (probability of main centre)</div>' + YLORRD.map((c, i) =>
+    '<div class="it"><span class="sw" style="background:' + c + '"></span>' +
+    pc(i === 0 ? probs[0] : BR[i - 1]) + ' – ' + pc(i === 6 ? probs[probs.length - 1] : BR[i]) + '</div>').join('');
+
+  function hull(p) {                                           // Andrew monotone chain
+    p = p.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (p.length < 3) return p;
+    const x = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    for (const q of p) { while (lo.length >= 2 && x(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length >= 2 && x(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+    lo.pop(); up.pop(); return lo.concat(up);
+  }
+
+  function draw(fit) {
+    [area, lines, pts, cen].forEach(g => g.clearLayers());
+    const v = $('hsel').value, info = $('hinfo');
+    const rows = v === 'all' ? PTS : v === 'other' ? PTS.filter(p => !byId[p[4]]) : PTS.filter(p => p[4] === +v);
+    const single = v !== 'all' && v !== 'other', c = single ? byId[+v] : null;
+
+    rows.forEach(p => {
+      const ctr = byId[p[4]];
+      L.circleMarker([p[3], p[2]], { pane: 'huff', radius: single ? 6 : 4.5, color: '#333', weight: .6, fillColor: colorFor(p[5]), fillOpacity: .85 })
+        .bindTooltip('<b>' + p[1] + '</b><br>SIRUTA ' + p[0] + '<br>Main centre: ' + (ctr ? ctr.name : 'local centre (ID ' + p[4] + ')') + '<br>PROB_MAX: ' + pc(p[5]))
+        .addTo(pts);
+    });
+
+    if (single) {
+      if ($('harea').checked && rows.length >= 3)
+        L.polygon(hull(rows.map(p => [p[2], p[3]]).concat([[c.lon, c.lat]])).map(q => [q[1], q[0]]),
+          { pane: 'huff', color: '#b10026', weight: 1.5, dashArray: '5 4', fillColor: '#fd8d3c', fillOpacity: .12, interactive: false }).addTo(area);
+      if ($('hlines').checked)
+        rows.forEach(p => L.polyline([[p[3], p[2]], [c.lat, c.lon]], { pane: 'huff', color: '#555', weight: .7, opacity: .5, interactive: false }).addTo(lines));
+      L.circleMarker([c.lat, c.lon], { pane: 'huff', radius: 9, color: '#0b2545', weight: 2.5, fillColor: '#fff', fillOpacity: 1 })
+        .bindTooltip(c.name, { permanent: true, direction: 'right', offset: [10, 0], className: 'hlabel' }).addTo(cen);
+      const pm = rows.map(p => p[5]);
+      info.innerHTML = '<b>' + c.name + '</b><br>Mass (TOP_D_MASS): ' + fmt(c.mass) + '<br>Localities drawn: ' + rows.length +
+        '<br>PROB_MAX: mean ' + pc(pm.reduce((a, b) => a + b, 0) / pm.length) + ', max ' + pc(Math.max(...pm));
+      if (fit) map.fitBounds(L.latLngBounds(rows.map(p => [p[3], p[2]])).extend([c.lat, c.lon]), { padding: [30, 30] });
+    } else if (v === 'other') {
+      info.innerHTML = 'Other local centres: <b>' + rows.length + '</b> localities';
+    } else {
+      CENTERS.forEach(k => L.circleMarker([k.lat, k.lon], { pane: 'huff', radius: 6, color: '#0b2545', weight: 2, fillColor: '#fff', fillOpacity: 1 })
+        .bindTooltip(k.name + ' (' + k.n + ' localities)').on('click', () => { $('hsel').value = k.id; draw(true); }).addTo(cen));
+      info.innerHTML = '<b>' + PTS.length + '</b> localities · <b>' + CENTERS.length + '</b> main centres + local centres';
+    }
+  }
+
+  $('hsel').addEventListener('change', () => draw(true));
+  $('harea').addEventListener('change', () => draw(false));
+  $('hlines').addEventListener('change', () => draw(false));
+
+  // accordion: open = layer on, close = layer off
+  const box = $('huff');
+  box.addEventListener('toggle', function () {
+    if (this.open) { layer.addTo(map); draw(false); }
+    else map.removeLayer(layer);
+  });
+})();
+</script>
+</body>
+</html>
