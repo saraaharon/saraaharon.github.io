@@ -1,154 +1,706 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Macroregiunea 2 – Centre de atracție (model Huff)</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<title>Sara AHARON</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  #map{height:100%;width:100%}
-  .panel{background:#fff;padding:10px 12px;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.35);font-size:13px;line-height:1.35}
-  .ctrl{min-width:250px;max-width:290px}
-  .ctrl h1{font-size:14px;margin:0 0 6px}
-  .ctrl select{width:100%;padding:5px;font-size:13px;margin-bottom:6px}
-  .ctrl label{display:block;margin-top:4px;cursor:pointer}
-  #info{margin-top:8px;border-top:1px solid #ddd;padding-top:6px}
-  #info b{font-weight:600}
-  .legend i{display:inline-block;width:18px;height:12px;margin-right:6px;vertical-align:-1px;opacity:.85;border:1px solid rgba(0,0,0,.25)}
-  .legend div{margin:2px 0}
-  .legend h2{font-size:12px;margin:0 0 5px}
-  .note{color:#666;font-size:11px;margin-top:6px}
+  :root { --navy:#0b2545; --teal:#2a9d8f; --ink:#1d2b3a; --muted:#64748b; --panel:rgba(255,255,255,.95); --line:#e2e8f0; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); }
+  #map { position:absolute; inset:0; background:#eef2f5; }
+  .panel { position:absolute; z-index:1000; background:var(--panel); border-radius:12px; box-shadow:0 4px 18px rgba(11,37,69,.18); backdrop-filter:blur(4px); }
+  #controls { top:14px; right:14px; width:320px; padding:16px 18px; max-height:calc(100% - 28px); overflow:auto; }
+  #controls h1 { font-size:16px; margin:0 0 2px; color:var(--navy); }
+  #controls .sub { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .lbl { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:4px; }
+  .lbl b { font-size:15px; color:var(--navy); }
+  .row { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+  input[type=range] { flex:1; accent-color:var(--teal); }
+  #play { width:34px; height:34px; border-radius:50%; border:0; background:var(--teal); color:#fff; font-size:13px; cursor:pointer; flex:none; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .stat { background:#f6f8fa; border-radius:8px; padding:8px 10px; }
+  .stat .v { font-size:18px; font-weight:600; color:var(--navy); }
+  .stat .k { font-size:11px; color:var(--muted); }
+  #legend { font-size:12px; }
+  #legend .hd { display:flex; color:var(--muted); font-size:11px; margin-bottom:2px; }
+  #legend .hd span:last-child { margin-left:auto; }
+  #legend .it { display:flex; align-items:center; gap:8px; padding:2px 0; }
+  #legend .sw { width:22px; height:12px; border-radius:2px; flex:none; }
+  #legend .it.off { opacity:.35; }
+  #legend .n { margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums; }
+  #sel { display:none; margin:0 0 10px; font-size:12px; background:#e6f4f1; border-radius:8px; padding:6px 10px; }
+  #sel button { float:right; border:0; background:none; cursor:pointer; color:var(--navy); font-size:12px; }
+  .note { margin-top:12px; font-size:11px; color:var(--muted); line-height:1.4; border-top:1px solid var(--line); padding-top:8px; }
+  #info { left:14px; bottom:24px; padding:10px 14px; font-size:12.5px; min-width:220px; display:none; }
+  #info .t { font-weight:600; color:var(--navy); font-size:14px; }
+  #info .m { color:var(--muted); }
+  #info .big { font-size:20px; font-weight:600; color:var(--navy); }
+  .apin { width:26px; height:26px; border-radius:50%; background:var(--navy); color:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 1px 5px rgba(0,0,0,.45); }
+  .apin.sel { background:var(--teal); transform:scale(1.25); }
+  .aplabel { background:rgba(255,255,255,.92); border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); font-weight:600; font-size:11px; color:var(--navy); padding:1px 5px; }
+
+  /* accordion boxes */
+  details.box { margin-top:12px; border-top:1px solid var(--line); padding-top:8px; }
+  details.box:first-of-type { margin-top:0; border-top:0; padding-top:0; }
+  details.box summary { cursor:pointer; font-weight:600; font-size:14px; color:var(--navy); }
+  .rrow { display:flex; align-items:center; gap:8px; font-size:12.5px; padding:3px 0; cursor:pointer; }
+  .rsw { width:22px; height:4px; border-radius:2px; flex:none; }
+  table.rt { width:100%; border-collapse:collapse; font-size:11.5px; margin:8px 0 4px; }
+  table.rt th { text-align:right; font-weight:500; color:var(--muted); padding:2px 0; }
+  table.rt th:first-child, table.rt td:first-child { text-align:left; }
+  table.rt td { text-align:right; padding:2px 0; font-variant-numeric:tabular-nums; }
+  #rstatus { font-size:11.5px; color:#b45309; min-height:14px; }
+  .pix { image-rendering:pixelated; }
+
+  /* Huff / attraction centers */
+  #hsel, #rlsel { width:100%; padding:6px 8px; font-size:12.5px; margin:8px 0 6px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+  #hinfo, #rlinfo { font-size:12.5px; margin:8px 0 6px; line-height:1.4; }
+  #hinfo b, #rlinfo b { color:var(--navy); }
+  #hleg .hd, #rlleg .hd { color:var(--muted); font-size:11px; margin:8px 0 2px; }
+  #hleg .it, #rlleg .it { display:flex; align-items:center; gap:8px; padding:2px 0; font-size:12px; }
+  #hleg .sw, #rlleg .sw { width:22px; height:12px; border-radius:2px; flex:none; border:1px solid rgba(0,0,0,.2); }
+  .hlabel, .rllabel { background:rgba(255,255,255,.92); border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); font-weight:600; font-size:11px; color:var(--navy); padding:1px 5px; }
+
+  @media (max-width:640px) {
+    #controls { top:auto; bottom:0; right:0; left:0; width:100%; border-radius:14px 14px 0 0; max-height:50%; }
+    #info { display:none !important; }
+  }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<div id="controls" class="panel">
+  <h1>Macroregiunea 2</h1>
+  <div class="sub">Open a section to activate its layer · each section is an independent analysis</div>
+
+  <!-- ============ 1. AIRPORTS ============ -->
+  <details id="air" class="box">
+    <summary>Airport isochrones</summary>
+    <div style="margin-top:8px">
+      <div class="sub">15-minute drive-time bands · Suceava, Iași, Bacău, Constanța airports</div>
+
+      <div id="sel"><button id="clear">✕ clear</button><span id="sel-t"></span></div>
+
+      <div class="lbl"><span>Show bands up to</span><b><span id="tval">210</span> min</b></div>
+      <div class="row">
+        <button id="play" title="Play">▶</button>
+        <input id="slider" type="range" min="15" max="210" step="15" value="210">
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="v" id="s-pop">–</div><div class="k">of M2 population within reach</div></div>
+        <div class="stat"><div class="v" id="s-km2">–</div><div class="k">km² within reach</div></div>
+      </div>
+
+      <div class="k" id="s-est" style="font-size:11px;color:#64748b;margin:-6px 0 10px"></div>
+      <div id="legend"></div>
+
+      <div class="note">
+        <div class="note">
+  Click an airport to isolate its bands. The analysis covers <b>Macroregiunea 2 only</b>, using the four
+  M2 airports. <b>Solid</b> areas use measured drive times to the nearest M2 airport (bands interpolated
+  from locality centroids, typical error ≈ 5 min). <b>Lighter dashed</b> areas were closer to an airport
+  outside M2 (Bucharest, Brașov…) or to the private Tulcea airfield; their times are <b>estimated</b> by
+  extending the measured times outward at 1.5 min per km of straight-line distance (typical error ≈ 10–15 min,
+  larger far from measured data; rivers and mountains are not modelled). Population: 2021 1 km grid.
+</div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ 2. ROADS ============ -->
+  <details id="roads" class="box">
+    <summary>Road network ✧ access to Western Europe</summary>
+    <div style="margin-top:8px">
+      <label class="rrow"><input type="checkbox" data-cls="motorway"><span class="rsw" style="background:#d62828"></span>Motorways (A)</label>
+      <label class="rrow"><input type="checkbox" data-cls="euro"><span class="rsw" style="background:#f77f00"></span>European roads (E)</label>
+      <label class="rrow"><input type="checkbox" data-cls="county"><span class="rsw" style="background:#6a4c93"></span>County roads (DJ)</label>
+      <label class="rrow" style="margin-top:6px"><input type="checkbox" id="rsurf">Distance-to-road surface (deficit map)</label>
+      <div id="rstatus"></div>
+      <div id="rstat"></div>
+      <div class="note">
+        Source: OpenStreetMap via Overpass (loaded on tick; county roads are heavy, give them a minute).
+        Lengths are counted inside the M2 outline only. The <b>deficit map</b> shows distance to the nearest ticked
+        road class on a ~2.5 km grid (≈ ±3 km): <span style="color:#2a9d8f">■</span> ≤15 km
+        <span style="color:#a8c97f">■</span> ≤30 <span style="color:#f4a261">■</span> ≤60
+        <span style="color:#c8553d">■</span> &gt;60 km. E-roads are detected from <code>int_ref</code>/<code>ref</code> tags.
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ 3. ATTRACTION CENTERS (HUFF) ============ -->
+  <details id="huff" class="box">
+    <summary>Attraction centers ✧ Huff model</summary>
+    <div style="margin-top:8px">
+      <div class="sub">942 localities · each coloured by the Huff probability of being drawn to its main centre</div>
+      <select id="hsel"></select>
+      <label class="rrow"><input type="checkbox" id="harea" checked>Area of influence</label>
+      <label class="rrow"><input type="checkbox" id="hlines">Links to the centre</label>
+      <div id="hinfo"></div>
+      <div id="hleg"></div>
+      <div class="note">
+        Data: <code>huff70.json</code> (Huff gravity model). Colour = <b>PROB_MAX</b>, the highest probability of a
+        locality choosing one destination (7 quantile classes, shared by all centres so they can be compared).
+        Click a centre on the map to isolate its catchment.
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ 4. ATTRACTION CENTERS (REILLY) ============ -->
+  <details id="reilly" class="box">
+    <summary>Attraction centers ✧ Reilly model</summary>
+    <div style="margin-top:8px">
+      <div class="sub">942 localities allocated to 238 centres · areas of influence (Reilly's law of retail gravitation)</div>
+      <select id="rlsel"></select>
+      <label class="rrow"><input type="checkbox" id="rlmarks" checked>Main centre markers</label>
+      <div id="rlinfo"></div>
+      <div id="rlleg"></div>
+      <div class="note">
+        Data: <code>reilly.json</code> (Reilly model). Each area is the catchment of one centre (<b>ALLOC_ID</b>);
+        colour = <b>N_ORIGINS</b>, the number of localities allocated to it. Hover for details, click an area to
+        isolate it. Names come from the Huff centres; the rest are local centres shown by ID.
+      </div>
+    </div>
+  </details>
+</div>
+
+<div id="info" class="panel"><span class="m">Hover over a band</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<!-- ===================== DATA (files in /assets/m2) ===================== -->
+<script>window.ISO_META = {"step": 15, "bands": 15, "totalPop": 5588104};</script>
+<script src="assets/m2/isochrones.js"></script>          <!-- defines window.ISO, ISO_META, AIRPORTS, M2_OUTLINE -->
+<script src="assets/m2/huff.js"></script>               <!-- defines window.HUFF (Huff attraction centers) -->
+<script src="assets/m2/reilly.js"></script>             <!-- defines window.REILLY (Reilly areas of influence) -->
 <script>
-/* Date: huff70.json (942 localități-origine, model Huff). Coordonatele de origine = O_LON / O_LAT.
-   Centrele de atracție sunt identificate prin TOP_D_IATA; numele și poziția lor sunt deduse
-   (fișierul nu conține un tabel de destinații) – corectează în CENTERS dacă e nevoie. */
-const PTS = [[121108,"Agapia",26.25896,47.16028,610,0.0701],[124938,"Alexandru Cel Bun",26.27086,46.91823,585,0.3568],[95612,"Alexandru Ioan Cuza",26.8634,47.1388,480,0.0562],[21123,"Asau",26.36969,46.52332,19,0.0898],[162381,"Bacesti",27.24029,46.8215,480,0.0813],[121153,"Bahna",26.79368,46.76823,3,0.0917],[21196,"Balcani",26.49453,46.64298,3,0.0745],[100273,"Bals",26.98258,47.28555,480,0.0715],[121242,"Baltatesti",26.30702,47.12963,585,0.0708],[95792,"Baltati",27.11853,47.22744,480,0.1136],[121386,"Bara",27.03931,47.02849,595,0.0926],[121466,"Bargauani",26.63874,46.98129,585,0.0701],[95872,"Belcesti",27.09559,47.30462,480,0.1],[21249,"Beresti-bistrita",26.85925,46.70838,3,0.1526],[121297,"Bicaz-chei",25.82655,46.82425,585,0.0628],[121340,"Bicazu Ardelean",25.87521,46.88841,585,0.063],[21506,"Blagesti",26.65013,46.67015,3,0.1044],[121607,"Bodesti",26.43697,47.04443,585,0.1301],[147054,"Bogdanesti",26.28044,47.3626,658,0.0607],[125178,"Boghicea",27.09923,47.06296,480,0.0976],[121652,"Borca",25.78631,47.19733,585,0.0362],[121732,"Borlesti",26.44047,46.77436,585,0.1116],[147072,"Boroaia",26.30037,47.32706,626,0.0843],[121796,"Botesti",26.74945,47.06743,480,0.0438],[121876,"Bozieni",27.15972,46.84101,480,0.0726],[96058,"Braesti",27.08669,47.14684,480,0.0981],[121938,"Brusturi",26.33729,47.2853,610,0.0708],[21597,"Brusturoasa",26.20099,46.56884,3,0.0499],[96110,"Butea",26.95338,47.08244,480,0.0644],[122061,"Candesti",26.56543,46.7113,3,0.0691],[122025,"Ceahlau",25.94668,47.01095,585,0.0661],[100362,"Ciohorani",26.69553,47.13741,499,0.058],[21891,"Colonesti",27.27085,46.60087,3,0.0941],[120888,"Cordun",26.86844,46.97729,595,0.1588],[100282,"Costesti",26.92639,47.23445,521,0.076],[122132,"Costisa",26.64286,46.75143,14,0.1028],[96478,"Cotnari",26.92369,47.34048,480,0.0628],[122187,"Cracaoani",26.23261,47.08778,585,0.0864],[96637,"Cristesti",26.56806,47.26238,499,0.0675],[147884,"Crucea",25.58464,47.35967,638,0.0502],[96664,"Cucuteni",26.92876,47.2785,480,0.0606],[96717,"Dagata",27.18957,46.94467,480,0.1012],[22111,"Damienesti",27.00607,46.74362,3,0.116],[122249,"Damuc",25.89608,46.74022,585,0.0586],[122285,"Dobreni",26.41946,46.99391,585,0.241],[125098,"Dochia",26.57612,46.91417,585,0.1038],[122347,"Doljesti",26.98306,47.03075,595,0.1057],[125132,"Draganesti",26.41403,47.31228,610,0.0455],[122392,"Dragomiresti",26.5753,47.02928,585,0.0807],[148382,"Draguseni",26.51417,47.30587,499,0.0396],[122463,"Dulcesti",26.78229,46.97289,595,0.0838],[120771,"Dumbrava Rosie",26.42385,46.88008,585,0.3422],[97009,"Erbiceni",27.23679,47.27187,480,0.1512],[122551,"Farcasa",25.8702,47.17697,546,0.0721],[122613,"Faurei",26.72084,46.91805,595,0.0601],[22576,"Filipesti",26.88727,46.7668,3,0.1053],[97063,"Focuri",27.19713,47.34048,480,0.1241],[148514,"Forasti",26.48477,47.37327,714,0.0359],[125150,"Gadinti",27.02958,46.92485,595,0.2118],[164062,"Garceni",27.29582,46.75185,480,0.0729],[122828,"Garcina",26.2737,47.01207,585,0.1913],[22781,"Garleni",26.78323,46.65708,3,0.1824],[122668,"Gheraesti",26.80766,47.0316,595,0.0678],[22718,"Ghimes-faget",26.06929,46.61053,585,0.0555],[125114,"Ghindaoani",26.35286,47.10658,585,0.0815],[122702,"Girov",26.49206,46.94609,585,0.1991],[122864,"Grinties",25.83687,47.02615,585,0.0537],[97321,"Gropnita",27.27898,47.37816,480,0.1442],[122908,"Grumazesti",26.38921,47.13775,610,0.0962],[97438,"Halaucesti",26.81477,47.10117,480,0.0498],[122953,"Hangu",26.0712,47.06122,585,0.0794],[100326,"Harmanesti",26.79905,47.28063,499,0.1359],[97465,"Helesteni",26.86468,47.19452,499,0.0601],[20313,"Hemeius",26.84936,46.62686,3,0.3193],[120922,"Horia",26.92001,46.89891,595,0.3243],[123013,"Icusesti",26.97755,46.80328,3,0.0818],[123102,"Ion Creanga",27.00917,46.86121,595,0.1344],[95499,"Ion Neculce",27.02769,47.17151,521,0.1304],[26379,"Itesti",26.87027,46.66103,3,0.2244],[23127,"Izvoru Berheciului",27.2222,46.58764,3,0.1145],[97606,"Lespezi",26.67896,47.33644,499,0.0669],[23207,"Lipova",27.2291,46.72061,3,0.0811],[97722,"Lungani",27.14827,47.16047,480,0.1232],[97777,"Madarjac",27.28656,47.05377,480,0.1725],[149316,"Malini",25.9856,47.36579,714,0.0449],[20466,"Margineni",26.78372,46.60007,3,0.2518],[123175,"Margineni",26.6464,46.88301,585,0.0679],[97811,"Mircesti",26.8554,47.06567,595,0.0582],[98051,"Miroslovesti",26.64825,47.15118,499,0.0626],[98168,"Mogosesti-siret",26.71972,47.11167,499,0.05],[123228,"Moldoveni",26.7989,46.82266,3,0.069],[98220,"Motca",26.6179,47.22608,499,0.1102],[95391,"Municipiul Pascani",26.72155,47.24868,480,0.046],[120726,"Municipiul Piatra-neamt",26.36225,46.92186,563,0.0683],[120860,"Municipiul Roman",26.94566,46.93548,574,0.0968],[125169,"Negresti",26.34643,47.0401,585,0.1584],[23644,"Negri",26.99343,46.70056,3,0.1571],[26353,"Odobesti",27.14378,46.67154,3,0.1252],[123255,"Oniceni",27.16749,46.78675,3,0.0709],[120968,"Oras Bicaz",26.05135,46.95486,585,0.0984],[147358,"Oras Brosteni",25.62256,47.21734,546,0.0366],[20778,"Oras Buhusi",26.70278,46.73366,3,0.0934],[98373,"Oras Podu Iloaiei",27.26858,47.21138,480,0.184],[124117,"Oras Roznov",26.53444,46.85637,601,0.117],[95471,"Oras Targu Frumos",27.00169,47.22554,480,0.0799],[121055,"Oras Targu Neamt",26.37435,47.20366,585,0.0465],[149655,"Ostra",25.74289,47.361,714,0.0378],[98300,"Oteleni",27.02629,47.08832,480,0.0809],[125141,"Pancesti",27.14993,46.91081,480,0.0821],[123601,"Pangarati",26.19485,46.92621,585,0.1978],[24338,"Parjol",26.6083,46.59261,3,0.1082],[123371,"Pastraveni",26.58009,47.17046,613,0.0819],[123424,"Petricani",26.45273,47.14415,610,0.0739],[123479,"Piatra Soimului",26.35193,46.81947,585,0.2021],[123521,"Pipirig",26.05132,47.22243,585,0.0427],[24427,"Plopana",27.24168,46.67018,3,0.0913],[123674,"Podoleni",26.63158,46.80595,617,0.0623],[123790,"Poiana Teiului",25.9255,47.12031,585,0.05],[123709,"Poienari",27.11068,46.88608,595,0.0833],[98435,"Popesti",27.2614,47.13677,480,0.1767],[26361,"Prajesti",26.98003,46.65817,3,0.2244],[100335,"Rachiteni",26.90485,47.0557,595,0.0721],[24711,"Racova",26.76251,46.70492,3,0.1201],[150114,"Rasca",26.11814,47.34228,714,0.0434],[123914,"Raucesti",26.41072,47.25529,610,0.1203],[123969,"Razboieni",26.55282,47.07502,585,0.0682],[124028,"Rediu",26.55235,46.74956,585,0.062],[124073,"Romani",26.70755,46.81033,3,0.0647],[24999,"Rosiori",27.09891,46.72972,3,0.1082],[98774,"Ruginoasa",26.84932,47.25505,499,0.0868],[125105,"Ruginoasa",26.69106,46.99496,595,0.0517],[124206,"Sabaoani",26.88569,47.00919,595,0.1207],[124153,"Sagna",27.04832,46.97265,595,0.1463],[25228,"Saucesti",26.94731,46.62845,3,0.2691],[120824,"Savinesti",26.47136,46.86247,585,0.1668],[25291,"Scorteni",26.67429,46.5793,3,0.1433],[25362,"Secuieni",27.10569,46.6325,3,0.1656],[124233,"Secuieni",26.81641,46.86217,595,0.088],[99058,"Sinesti",27.20065,47.09467,480,0.1404],[150258,"Slatina",25.93173,47.41835,720,0.0501],[124331,"Stanita",27.15513,47.00874,480,0.1063],[124411,"Stefan Cel Mare",26.54565,46.98116,585,0.1148],[99165,"Stolniceni-prajescu",26.7431,47.18723,499,0.1353],[99209,"Strunga",26.94409,47.15909,480,0.0683],[150356,"Stulpicani",25.67215,47.44045,638,0.0398],[124634,"Tamaseni",26.94356,47.00041,595,0.173],[99441,"Tansa",27.25017,46.8986,480,0.1014],[124493,"Tarcau",26.13123,46.76702,585,0.0971],[124563,"Tasca",26.00301,46.883,585,0.0854],[99478,"Tatarusi",26.56516,47.35177,499,0.0419],[124616,"Tazlau",26.37806,46.70688,585,0.0794],[99673,"Tibana",27.31772,46.98896,480,0.1611],[99780,"Tibanesti",27.31835,46.92296,480,0.1268],[124803,"Tibucani",26.51954,47.10073,585,0.0551],[124661,"Timisesti",26.51435,47.22652,610,0.0536],[99539,"Todiresti",26.84495,47.33447,499,0.0565],[25861,"Traian",27.03208,46.64439,3,0.2203],[124723,"Trifesti",26.82583,46.91358,595,0.1438],[124750,"Tupilati",26.64969,47.0804,585,0.0487],[124849,"Urecheni",26.52869,47.1751,610,0.0446],[150766,"Vadu Moldovei",26.39131,47.38682,658,0.0635],[99968,"Valea Seaca",26.6625,47.28737,499,0.1597],[124885,"Valea Ursului",27.07838,46.79287,3,0.0799],[125123,"Valeni",26.70895,47.03659,585,0.0435],[100086,"Vanatori",26.76327,47.33808,499,0.0792],[125016,"Vanatori-neamt",26.27619,47.22218,610,0.0536],[125061,"Zanesti",26.5721,46.82867,585,0.0811],[26289,"Zemes",26.41011,46.58217,3,0.0646],[162014,"Albesti",27.86122,46.513,860,0.1042],[162069,"Alexandru Vlahuta",27.62542,46.44997,860,0.0608],[162149,"Arsura",28.04491,46.79698,480,0.094],[162327,"Bacani",27.67654,46.33244,790,0.1525],[75542,"Balabanesti",27.73965,46.08535,790,0.0969],[75613,"Balasesti",27.6459,46.09783,790,0.1123],[162452,"Balteni",27.63163,46.67657,860,0.2211],[162194,"Banca",27.811,46.34035,790,0.1023],[75356,"Beresti-meria",27.92757,46.07098,790,0.0579],[162498,"Berezeni",28.1243,46.40208,480,0.0506],[162559,"Blagesti",28.02036,46.14033,834,0.0555],[162595,"Bogdana",27.62149,46.54172,860,0.1176],[162693,"Bogdanesti",27.72506,46.42926,860,0.0622],[162791,"Bogdanita",27.66917,46.45677,860,0.0623],[175260,"Boghesti",27.42426,46.1572,790,0.0638],[162871,"Botesti",27.89529,46.7749,860,0.0936],[75766,"Brahasesti",27.34628,46.05128,790,0.0323],[75819,"Buciumeni",27.31397,46.00363,379,0.0634],[162924,"Bunesti-averesti",27.97018,46.79888,480,0.0976],[75864,"Cavadinesti",28.03481,46.06698,790,0.0468],[75917,"Certesti",27.61485,46.01137,790,0.0521],[167268,"Ciocani",27.58802,46.2457,790,0.2779],[96192,"Ciortesti",27.85001,46.91229,480,0.158],[163002,"Codaesti",27.74837,46.85559,480,0.1457],[21971,"Corbasca",27.13797,46.29463,3,0.0716],[175787,"Corbita",27.30583,46.15285,894,0.0627],[75953,"Corod",27.63105,45.93088,427,0.0488],[163057,"Coroiesti",27.50054,46.28813,790,0.1044],[163137,"Costesti",27.78135,46.47059,860,0.0844],[96423,"Costuleni",27.86983,47.00635,480,0.2115],[96593,"Cozmesti",28.0112,46.87022,480,0.1172],[167277,"Cozmesti",27.48749,46.7245,480,0.079],[163208,"Cretesti",27.98593,46.63736,822,0.1299],[163253,"Danesti",27.6701,46.8444,480,0.1301],[22237,"Dealu Morii",27.2925,46.28512,3,0.0543],[163324,"Deleni",27.75231,46.53712,860,0.155],[163379,"Delesti",27.5452,46.69173,860,0.1035],[164277,"Dimitrie Cantemir",28.0615,46.51651,860,0.0596],[96888,"Dobrovat",27.69848,46.96951,480,0.2279],[167286,"Dodesti",27.94732,46.35582,790,0.062],[96904,"Dolhesti",27.90867,46.87,480,0.1245],[163486,"Dragomiresti",27.34891,46.62405,3,0.0723],[76175,"Draguseni",27.72652,46.00373,790,0.0549],[100308,"Draguseni",27.48979,46.89073,480,0.1419],[163618,"Dranceni",28.14699,46.7691,480,0.0916],[163681,"Duda-epureni",28.0788,46.72955,822,0.2159],[163734,"Dumesti",27.30682,46.83233,480,0.0914],[163789,"Epureni",27.90412,46.24357,790,0.0954],[163832,"Falciu",28.10332,46.29685,790,0.0472],[167295,"Feresti",27.7104,46.79019,860,0.1027],[22488,"Filipeni",27.18557,46.53974,3,0.1372],[167231,"Fruntiseni",27.76146,46.20315,790,0.2618],[163903,"Gagesti",27.99698,46.32932,790,0.0562],[22665,"Gaiceana",27.20993,46.36085,3,0.0814],[163967,"Gherghesti",27.52053,46.52415,860,0.0696],[76406,"Ghidigeni",27.49698,46.02163,790,0.044],[22834,"Glavanesti",27.37686,46.26031,790,0.0563],[76497,"Gohor",27.41704,46.03299,379,0.0666],[97189,"Gorban",28.07385,46.91251,480,0.126],[97241,"Grajduri",27.55693,46.97919,480,0.2378],[164133,"Grivita",27.6741,46.1654,790,0.2843],[97394,"Grozesti",28.0284,47.00148,480,0.1647],[164197,"Hoceni",27.98847,46.52505,860,0.0765],[176445,"Homocea",27.23538,46.14688,869,0.1324],[23047,"Huruiesti",27.23335,46.26066,3,0.0541],[164339,"Iana",27.55597,46.40118,790,0.0637],[167222,"Ibanesti",27.60665,46.4184,790,0.0599],[97553,"Ipatele",27.42863,46.91501,480,0.1478],[164393,"Ivanesti",27.45098,46.64938,860,0.0655],[164543,"Ivesti",27.54868,46.2032,790,0.1804],[76638,"Jorasti",27.86975,45.99223,790,0.046],[164598,"Laza",27.5903,46.64453,860,0.157],[164687,"Lipovat",27.69324,46.57112,860,0.2163],[164749,"Lunca Banului",28.18403,46.55497,822,0.0762],[164829,"Malusteni",27.91707,46.17464,790,0.0859],[164892,"Miclesti",27.83163,46.82704,480,0.1154],[97875,"Mironeasa",27.42103,46.98742,480,0.2021],[98113,"Mogosesti",27.49423,47.03307,480,0.2948],[98202,"Mosna",27.97206,46.91433,480,0.1342],[23494,"Motoseni",27.41817,46.32597,790,0.0592],[174860,"Municipiul Adjud",27.18775,46.11513,894,0.0714],[161794,"Municipiul Barlad",27.67203,46.22799,868,0.0514],[161829,"Municipiul Husi",28.08605,46.67397,480,0.0767],[161945,"Municipiul Vaslui",27.73612,46.64899,480,0.0722],[164936,"Muntenii De Jos",27.80457,46.59844,860,0.2823],[167302,"Muntenii De Sus",27.75852,46.69483,860,0.3885],[165069,"Oltenesti",27.90088,46.59044,860,0.1415],[23868,"Oncesti",27.27218,46.48489,3,0.0995],[75338,"Oras Beresti",27.86437,46.09042,790,0.0747],[164981,"Oras Murgeni",28.03992,46.19986,790,0.0587],[161856,"Oras Negresti",27.4715,46.83662,480,0.1176],[165130,"Osesti",27.44593,46.76686,480,0.0883],[165185,"Padureni",28.09701,46.57853,822,0.1127],[24089,"Parincea",27.1187,46.47135,3,0.1593],[177236,"Paunesti",27.08804,46.03428,869,0.0409],[165274,"Perieni",27.61244,46.19528,790,0.3077],[178894,"Ploscuteni",27.26256,46.07811,869,0.0805],[167311,"Pochidia",27.56826,46.04531,790,0.0597],[24524,"Podu Turcului",27.45915,46.19752,790,0.0655],[165416,"Pogana",27.5582,46.33762,790,0.1063],[167259,"Pogonesti",27.53293,46.15521,790,0.1193],[77587,"Poiana",27.26192,46.0041,917,0.0454],[165336,"Poienesti",27.54847,46.58621,860,0.1036],[77028,"Priponesti",27.4696,46.09805,790,0.0614],[177352,"Pufesti",27.1993,46.00483,869,0.0371],[165470,"Puiesti",27.4664,46.4498,3,0.0532],[165611,"Pungesti",27.37478,46.70517,480,0.0713],[167320,"Puscasi",27.64006,46.61878,860,0.2442],[24837,"Rachitoasa",27.36778,46.45011,3,0.0672],[77561,"Radesti",27.80337,46.06445,790,0.0736],[98685,"Raducaneni",27.97223,46.96944,480,0.1618],[167240,"Rafaila",27.36932,46.79056,480,0.0885],[165719,"Rebricea",27.57621,46.86747,480,0.1399],[165817,"Rosiesti",27.89226,46.44062,860,0.0629],[177557,"Ruginesti",27.15269,46.06791,869,0.0608],[25068,"Sascut",27.08274,46.1969,3,0.0519],[98916,"Scanteia",27.59228,46.92253,480,0.1839],[99290,"Scheia",27.50359,46.9416,480,0.1837],[98827,"Schitu Duca",27.74562,47.01875,480,0.2716],[165899,"Solesti",27.81764,46.76274,860,0.1277],[165979,"Stanilesti",28.21487,46.64804,822,0.1867],[25521,"Stanisesti",27.29589,46.429,3,0.0754],[166057,"Stefan Cel Mare",27.59961,46.73392,860,0.1174],[77288,"Suceveni",28.03325,45.9812,752,0.0547],[166137,"Suletea",27.91846,46.3003,790,0.0796],[166235,"Tacuta",27.6654,46.93223,480,0.1893],[166182,"Tanacu",27.83851,46.67559,860,0.2529],[177879,"Tanasoaia",27.36585,46.10644,379,0.0604],[166315,"Tatarani",27.9439,46.70012,860,0.1096],[25745,"Tatarasti",27.19468,46.22995,3,0.0509],[77377,"Tepu",27.37666,45.97683,427,0.0608],[166413,"Todiresti",27.3833,46.85033,480,0.1092],[166529,"Tutova",27.56987,46.11896,790,0.1096],[166636,"Valeni",27.75366,46.75268,860,0.1602],[77509,"Varlezi",27.83441,45.91913,752,0.0498],[166672,"Vetrisoaia",28.1959,46.449,480,0.0549],[166707,"Viisoara",27.88595,46.38983,790,0.0597],[166770,"Vinderei",27.79901,46.15359,790,0.1438],[166869,"Voinesti",27.42225,46.55216,3,0.0623],[26118,"Vultureni",27.23479,46.41273,3,0.0888],[166985,"Vulturesti",27.5298,46.79696,480,0.1027],[167035,"Vutcani",27.988,46.43732,860,0.0547],[167071,"Zapodeni",27.64766,46.76302,860,0.1162],[167179,"Zorleni",27.75957,46.2619,790,0.2633],[44863,"Amaru",26.60194,44.93057,228,0.1256],[175126,"Andreiasu De Jos",26.80438,45.71345,888,0.0466],[44989,"Balaceanu",27.13307,45.24708,228,0.089],[175206,"Balesti",27.23951,45.47166,888,0.0531],[44934,"Balta Alba",27.35754,45.29621,174,0.0597],[75515,"Barcea",27.49709,45.7559,427,0.0836],[45003,"Beceni",26.78796,45.37946,228,0.0981],[45101,"Berca",26.66879,45.30627,228,0.1319],[178929,"Biliesti",27.33617,45.71797,888,0.1501],[45245,"Bisoca",26.69529,45.55457,228,0.0487],[45334,"Blajani",26.81637,45.29723,228,0.1518],[45361,"Boldu",27.24514,45.29793,228,0.0572],[175368,"Bolotesti",27.005,45.86024,888,0.0659],[175439,"Bordesti",27.0264,45.54936,929,0.0605],[45389,"Bozioru",26.46996,45.38363,228,0.0653],[45496,"Bradeanu",26.85199,44.89647,228,0.1267],[45539,"Braesti",26.49787,45.44094,228,0.0657],[45619,"Breaza",26.5327,45.11073,228,0.1318],[175466,"Brosteni",27.00512,45.76478,888,0.0838],[45673,"Buda",26.89287,45.49339,228,0.0495],[45815,"C.a. Rosetti",27.15588,45.04627,228,0.1047],[45753,"Calvini",26.28608,45.24419,232,0.1116],[174780,"Campineanca",27.13702,45.71313,888,0.3149],[45888,"Canesti",26.60728,45.3974,228,0.0805],[175732,"Carligele",27.05796,45.68426,888,0.1315],[45959,"Catina",26.24819,45.30003,230,0.112],[46019,"Cernatesti",26.76676,45.29431,228,0.159],[46108,"Chiliile",26.58761,45.44241,228,0.0676],[175509,"Chiojdeni",26.82911,45.56212,886,0.044],[46180,"Chiojdu",26.1843,45.42108,262,0.0779],[46251,"Cilibia",27.04974,45.04385,228,0.1514],[42968,"Ciocile",27.25943,44.81228,228,0.0604],[175590,"Ciorasti",27.33679,45.42186,174,0.0553],[43019,"Ciresu",27.45717,45.01361,174,0.067],[46313,"Cislau",26.38335,45.21274,228,0.0878],[46377,"Cochirleanca",27.02527,45.2053,228,0.163],[46439,"Colti",26.39999,45.40083,262,0.0836],[46484,"Costesti",26.75549,45.04803,228,0.311],[175885,"Cotesti",27.06753,45.63701,888,0.1342],[46554,"Cozieni",26.49077,45.33642,228,0.0806],[75221,"Draganesti",27.50601,45.79503,427,0.1159],[43073,"Dudesti",27.45343,44.87552,174,0.0656],[175938,"Dumbraveni",27.0956,45.54753,888,0.0712],[175983,"Dumitresti",26.90158,45.58534,888,0.054],[50564,"Florica",26.76729,44.91584,228,0.133],[43180,"Galbenu",27.11732,45.18262,228,0.0913],[46769,"Galbinasi",26.95818,45.05443,228,0.2361],[176212,"Garoafa",27.27085,45.80874,888,0.1239],[46803,"Gheraseni",26.79766,45.00274,228,0.231],[46830,"Ghergheasa",27.1858,45.28591,228,0.0662],[46867,"Glodeanu Sarat",26.65949,44.86406,228,0.114],[46910,"Glodeanu-silistea",26.77841,44.8377,228,0.1122],[174824,"Golesti",27.16057,45.65888,888,0.3378],[178938,"Gologanu",27.30547,45.60635,888,0.1265],[43279,"Gradistea",27.3837,45.26703,174,0.0746],[47006,"Grebanu",26.96069,45.37063,228,0.0773],[176301,"Gugesti",27.1682,45.55192,888,0.0965],[176338,"Gura Calitei",26.88189,45.65827,888,0.0654],[47079,"Gura Teghii",26.41826,45.59898,228,0.0458],[76601,"Ivesti",27.55046,45.67749,752,0.0522],[176506,"Jaristea",27.04882,45.80008,888,0.0861],[43466,"Jirlau",27.19873,45.14784,228,0.0888],[176551,"Jitia",26.76454,45.58584,228,0.0417],[47159,"Largu",27.14368,44.95794,228,0.0914],[47186,"Lopatari",26.55431,45.53371,228,0.0531],[47300,"Luciu",27.06006,44.97187,228,0.1211],[47337,"Magura",26.56592,45.2612,228,0.117],[176613,"Maicanesti",27.43612,45.47968,174,0.0627],[47630,"Manzalesti",26.6298,45.50701,228,0.0529],[47373,"Maracineni",26.80698,45.19978,228,0.4485],[47417,"Margaritesti",26.85317,45.42554,228,0.0697],[176686,"Mera",26.93583,45.77562,888,0.0646],[47453,"Merei",26.66759,45.1318,228,0.2935],[47578,"Mihailesti",26.67824,44.92354,228,0.13],[176748,"Milcovul",27.24801,45.6435,888,0.2636],[43625,"Mircea Voda",27.39574,45.10708,174,0.0742],[47774,"Movila Banului",26.7074,44.97181,228,0.1707],[76745,"Movileni",27.37382,45.76289,427,0.098],[44818,"Municipiul Buzau",26.8156,45.13834,254,0.1002],[174744,"Municipiul Focsani",27.20427,45.696,890,0.0917],[44845,"Municipiul Ramnicu Sarat",27.08813,45.40901,228,0.0534],[75203,"Municipiul Tecuci",27.41901,45.84733,888,0.0547],[47818,"Murgesti",26.8803,45.39687,228,0.0767],[47854,"Naeni",26.48225,45.09752,228,0.1265],[176891,"Naruja",26.76845,45.81817,940,0.0384],[176944,"Nereju",26.59509,45.66813,228,0.0356],[177003,"Nistoresti",26.54786,45.79222,228,0.0288],[178947,"Obrejita",27.08976,45.48222,923,0.0986],[48021,"Odaile",26.5468,45.38653,228,0.0773],[42753,"Oras Faurei",27.26986,45.08934,228,0.072],[43331,"Oras Ianca",27.49316,45.12903,174,0.0997],[47916,"Oras Nehoiu",26.3063,45.41658,228,0.0584],[175019,"Oras Odobesti",27.12676,45.75816,888,0.1788],[48325,"Oras Patarlagele",26.33891,45.32528,232,0.0855],[48744,"Oras Pogoanele",26.98733,44.90336,228,0.1167],[48138,"Padina",27.12636,44.83062,228,0.078],[177101,"Paltin",26.71675,45.77922,926,0.1163],[48227,"Panatau",26.40253,45.30546,267,0.0722],[48165,"Pardosi",26.87225,45.45108,228,0.0612],[48557,"Parscov",26.53388,45.29548,228,0.0998],[48487,"Pietroasele",26.59069,45.09335,228,0.1778],[48682,"Podgoria",27.01802,45.45199,923,0.1346],[177263,"Poiana Cristei",26.94418,45.69826,888,0.077],[178901,"Popesti",27.07364,45.58922,888,0.0841],[48771,"Posta Calnau",26.90317,45.23637,228,0.2223],[48842,"Puiesti",27.23003,45.39085,276,0.0748],[43698,"Racovita",27.44899,45.32412,174,0.0852],[48922,"Racoviteni",26.91723,45.34203,228,0.0941],[48968,"Ramnicelu",27.13383,45.366,276,0.1692],[178956,"Rastoaca",27.32869,45.64643,888,0.18],[177469,"Reghiu",26.86069,45.80844,888,0.0471],[49019,"Robeasca",27.13492,45.13118,228,0.1112],[43812,"Rosiori",27.36097,44.82291,174,0.0571],[49046,"Rusetu",27.21129,44.93485,228,0.0759],[49073,"Sageata",27.02624,45.12421,228,0.1933],[49153,"Sahateni",26.56335,45.02554,228,0.1516],[43867,"Salcia Tudor",27.51071,45.41012,174,0.089],[49206,"Sapoca",26.76887,45.23072,228,0.2624],[49233,"Sarulesti",26.77343,45.48783,228,0.0578],[49313,"Scortoasa",26.67024,45.38295,228,0.0917],[49439,"Scutelnici",26.94608,44.83366,228,0.0997],[177600,"Sihlea",27.16604,45.48483,276,0.0747],[49484,"Siriu",26.2326,45.53142,228,0.0481],[177655,"Slobozia Bradului",27.03826,45.48419,276,0.0827],[177726,"Slobozia Ciorasti",27.20468,45.601,888,0.1533],[49545,"Smeeni",26.89488,44.98425,228,0.1845],[178965,"Spulber",26.74862,45.74934,910,0.0699],[49625,"Stalpu",26.7167,45.07432,228,0.3182],[177842,"Suraia",27.38035,45.67036,888,0.1109],[44113,"Surdila-gaiseanca",27.33988,45.06246,174,0.0632],[42771,"Surdila-greci",27.25559,45.05921,228,0.0735],[44140,"Sutesti",27.47327,45.22905,174,0.097],[178046,"Tamboesti",27.04577,45.51754,923,0.1015],[177986,"Tataranu",27.30776,45.53149,888,0.0748],[49849,"Tintesti",26.86986,45.0608,228,0.3623],[49643,"Tisau",26.55426,45.19825,228,0.1452],[49769,"Topliceni",26.96642,45.44216,276,0.0777],[49894,"Ulmeni",26.63104,45.03677,228,0.1748],[44328,"Ulmu",27.30235,44.92516,228,0.0618],[77402,"Umbraresti",27.43991,45.70546,402,0.0653],[50549,"Unguriu",26.62501,45.27214,228,0.1317],[178279,"Urechesti",27.03517,45.61034,916,0.0998],[49956,"Vadu Pasii",26.90929,45.16803,228,0.4039],[50399,"Valcelele",27.36495,45.34749,174,0.0661],[50022,"Valea Ramnicului",27.03612,45.33463,276,0.097],[50068,"Valea Salciei",26.81469,45.50723,228,0.0525],[178607,"Vanatori",27.27385,45.73211,888,0.2642],[178689,"Vartescoiu",27.05683,45.72457,888,0.1329],[50102,"Vernesti",26.68918,45.21629,228,0.2424],[50228,"Vintila Voda",26.72841,45.45625,228,0.0697],[178475,"Vintileasca",26.70375,45.6311,228,0.0394],[50326,"Viperesti",26.45843,45.24334,228,0.0934],[44462,"Visani",27.31077,45.17421,174,0.0624],[178821,"Vulturu",27.41508,45.5976,888,0.0737],[50415,"Zarnesti",26.90561,45.29229,228,0.1314],[44532,"Zavoaia",27.47522,44.95373,174,0.0758],[50479,"Ziduri",27.05984,45.26129,228,0.099],[21007,"Agas",26.18931,46.454,19,0.0762],[21098,"Ardeoani",26.60827,46.52702,3,0.1039],[21454,"Barsanesti",26.67721,46.33488,56,0.0839],[21338,"Beresti-tazlau",26.67658,46.48233,3,0.1308],[21418,"Berzunti",26.63124,46.40657,3,0.089],[21560,"Bogdanesti",26.68771,46.20852,56,0.1237],[26338,"Buciumi",26.78998,46.20311,56,0.2142],[21668,"Buhoci",27.02204,46.57562,3,0.3532],[21757,"Caiuti",26.88525,46.14771,56,0.0737],[175670,"Campuri",26.75783,46.04508,56,0.0431],[21720,"Casin",26.72682,46.18665,56,0.1373],[21855,"Cleja",26.8941,46.39186,3,0.1438],[22059,"Cotofanesti",26.9562,46.12648,56,0.0477],[22380,"Dofteana",26.48204,46.2955,19,0.0895],[22460,"Faraoani",26.89114,46.43402,3,0.1884],[176150,"Fitionesti",27.03611,45.99238,913,0.0361],[26346,"Gioseni",26.99817,46.42382,3,0.1682],[20607,"Gura Vaii",26.85773,46.29367,56,0.1743],[22898,"Helegiu",26.78136,46.34916,56,0.1028],[22941,"Horgesti",27.05764,46.40492,3,0.135],[20359,"Letea Veche",26.96633,46.55078,3,0.6261],[23289,"Livezi",26.74434,46.40553,3,0.1187],[23350,"Luizi-calugara",26.85014,46.53228,3,0.3775],[23387,"Magiresti",26.52309,46.5158,49,0.1002],[20411,"Magura",26.83071,46.5636,3,0.4218],[23449,"Manastirea Casin",26.61329,46.09983,56,0.0513],[176793,"Movilita",27.11677,45.96587,911,0.0374],[20297,"Municipiul Bacau",26.90842,46.56602,41,0.1144],[20876,"Municipiul Moinesti",26.46374,46.472,19,0.1856],[20563,"Municipiul Onesti",26.7834,46.25678,3,0.0669],[23715,"Nicolae Balcescu",26.88809,46.47236,3,0.2809],[23797,"Oituz",26.51769,46.16199,3,0.0484],[20821,"Oras Comanesti",26.42466,46.40607,49,0.1137],[22166,"Oras Darmanesti",26.35742,46.31932,19,0.1585],[20910,"Oras Slanic-moldova",26.39472,46.18372,3,0.0495],[20965,"Oras Targu Ocna",26.60136,46.28488,56,0.0715],[23948,"Orbeni",27.00764,46.2715,3,0.0696],[23975,"Palanca",26.10284,46.50342,19,0.0477],[24187,"Pancesti",27.10802,46.36638,3,0.0997],[24034,"Parava",26.96371,46.3095,3,0.0854],[24276,"Pargaresti",26.64673,46.24399,56,0.1006],[24631,"Poduri",26.56662,46.46195,3,0.081],[24766,"Racaciuni",26.94593,46.35483,3,0.1094],[177405,"Racoasa",26.88417,46.01565,3,0.0353],[25148,"Sanduleni",26.74378,46.45433,3,0.1527],[26320,"Sarata",26.87078,46.50239,3,0.3663],[25488,"Solont",26.52675,46.5686,3,0.0803],[177762,"Soveja",26.65271,46.0167,3,0.0385],[20670,"Stefan Cel Mare",26.8539,46.19628,56,0.1441],[177799,"Straoane",27.00147,45.96374,888,0.0358],[25629,"Strugari",26.74421,46.53288,3,0.2092],[25692,"Tamasi",27.00639,46.48198,3,0.2683],[25825,"Targu Trotus",26.68628,46.27575,56,0.1467],[178117,"Tulnici",26.46842,45.98825,3,0.0368],[25932,"Ungureni",27.0951,46.5491,3,0.2183],[26029,"Urechesti",27.06323,46.12684,869,0.0532],[26083,"Valea Seaca",27.03678,46.24625,3,0.0617],[95667,"Andrieseni",27.30297,47.51998,480,0.1128],[95747,"Aroneanu",27.61239,47.22813,480,0.5537],[95088,"Barnova",27.62283,47.07816,480,0.4862],[95943,"Bivolari",27.40299,47.53124,480,0.1322],[36499,"Calarasi",27.26531,47.61114,480,0.0895],[96147,"Ceplenita",26.98031,47.3858,514,0.1438],[96254,"Ciurea",27.57717,47.05273,480,0.3834],[96334,"Coarnele Caprei",27.11556,47.39257,480,0.0931],[96370,"Comarna",27.79223,47.07266,480,0.3045],[36569,"Copalau",26.87921,47.60848,98,0.0902],[36756,"Corni",26.58501,47.64857,98,0.185],[39975,"Cosula",26.78235,47.60242,98,0.129],[36907,"Cristesti",26.7129,47.60609,98,0.1496],[96815,"Deleni",26.78094,47.46091,477,0.0975],[148097,"Dolhesti",26.51798,47.43938,714,0.0437],[96940,"Dumesti",27.33997,47.17404,480,0.2335],[148453,"Fantanele",26.51629,47.59428,98,0.0905],[100317,"Fantanele",27.18425,47.4141,480,0.1057],[37324,"Frumusica",26.85455,47.5215,98,0.0698],[97090,"Golaiesti",27.69272,47.263,480,0.3995],[37734,"Hlipiceni",27.14185,47.58816,480,0.0728],[95159,"Holboca",27.67973,47.17735,480,0.607],[97517,"Horlesti",27.39205,47.12108,480,0.27],[97679,"Letcani",27.40644,47.18906,480,0.2992],[37912,"Lunca",27.01465,47.61685,98,0.0735],[97919,"Miroslava",27.49448,47.13626,480,0.5394],[98257,"Movileni",27.37642,47.31454,480,0.2138],[95060,"Municipiul Iasi",27.58869,47.15739,529,0.1494],[148006,"Oras Dolhasca",26.61977,47.41731,98,0.0431],[37280,"Oras Flamanzi",26.94292,47.55048,105,0.0649],[95355,"Oras Harlau",26.85052,47.42541,514,0.1083],[149227,"Oras Liteni",26.50119,47.51026,98,0.062],[98337,"Plugari",27.10921,47.48783,480,0.0809],[98505,"Popricani",27.52203,47.27417,480,0.357],[38580,"Prajeni",27.03009,47.48652,480,0.0683],[98603,"Prisacani",27.89839,47.05169,480,0.2394],[98649,"Probota",27.49123,47.38911,480,0.2129],[38679,"Rauseni",27.20963,47.5547,480,0.0877],[95239,"Rediu",27.46712,47.2382,480,0.3286],[98738,"Romanesti",27.34105,47.27241,480,0.2099],[100344,"Roscani",27.42043,47.44947,480,0.158],[38893,"Santa Mare",27.33803,47.59954,102,0.0982],[98998,"Scobinti",26.94129,47.404,477,0.1216],[99370,"Sipote",27.19891,47.47322,480,0.1009],[99101,"Siretel",26.72961,47.42101,98,0.0436],[39051,"Sulita",26.92732,47.64862,98,0.1071],[99879,"Tiganasi",27.46562,47.33325,480,0.2376],[39266,"Todireni",27.10882,47.62229,480,0.066],[95293,"Tomesti",27.70759,47.11377,480,0.4763],[99600,"Trifesti",27.50918,47.45156,480,0.1846],[39391,"Tudora",26.64677,47.50227,98,0.0675],[99922,"Tutora",27.76327,47.14334,480,0.3636],[150588,"Udesti",26.42682,47.57471,714,0.113],[96003,"Ungheni",27.74027,47.20436,480,0.4188],[100353,"Valea Lupului",27.49743,47.1881,480,0.5357],[100004,"Victoria",27.60364,47.29398,480,0.3433],[100148,"Vladeni",27.34223,47.43234,480,0.1474],[100219,"Voinesti",27.41488,47.06266,480,0.2732],[39872,"Vorona",26.62528,47.57293,98,0.1078],[146799,"Adancata",26.29836,47.73778,714,0.2723],[40035,"Adaseni",26.93874,48.06821,98,0.0673],[36131,"Albesti",27.08792,47.68951,98,0.0747],[36202,"Avrameni",26.95499,48.01821,98,0.0759],[146904,"Baia",26.21906,47.42078,658,0.0973],[151530,"Balaceana",26.04459,47.64479,714,0.1093],[146995,"Balcauti",26.06317,47.89941,702,0.07],[36300,"Baluseni",26.7875,47.67468,98,0.2384],[39983,"Blandesti",26.89667,47.69591,98,0.1522],[147134,"Bosanci",26.29147,47.57198,714,0.1705],[36373,"Braesti",26.46425,47.86048,98,0.1084],[36426,"Broscauti",26.47575,47.95498,119,0.2328],[147465,"Bunesti",26.32387,47.50999,658,0.1163],[147580,"Calafindesti",26.0994,47.8598,714,0.0728],[39967,"Candesti",26.20817,47.92426,714,0.064],[151567,"Ciprian Porumbescu",26.06538,47.57671,714,0.0977],[36532,"Concesti",26.59153,48.14495,114,0.234],[36649,"Cordareni",26.592,48.00125,98,0.0834],[36676,"Corlateni",26.5859,47.93938,98,0.1104],[147786,"Cornu Luncii",26.13509,47.41965,714,0.0663],[36809,"Cotusca",26.874,48.12244,98,0.066],[36952,"Cristinesti",26.39079,48.10018,119,0.0677],[35759,"Curtesti",26.64593,47.69431,98,0.4343],[37057,"Dangeni",26.92088,47.84657,98,0.1336],[147937,"Darmanesti",26.12518,47.74506,714,0.151],[37011,"Dersca",26.22575,47.98085,714,0.0547],[39959,"Dimacheni",26.5554,47.90437,98,0.1252],[37100,"Dobarceni",27.05967,47.83649,98,0.0885],[148328,"Dragoiesti",26.09446,47.54013,714,0.0913],[37173,"Draguseni",26.82558,48.03289,98,0.0803],[148426,"Dumbraveni",26.43402,47.66807,714,0.146],[37217,"Durnesti",27.11019,47.75833,98,0.0765],[37397,"George Enescu",26.523,48.02657,119,0.1049],[37459,"Gorbanesti",26.87959,47.77621,98,0.1847],[148916,"Gramesti",26.14177,47.90595,714,0.0654],[148970,"Granicesti",26.07378,47.79424,714,0.089],[37618,"Hanesti",26.9932,47.90842,98,0.088],[151512,"Hantesti",26.35202,47.7583,714,0.1738],[151549,"Hartop",26.36671,47.48358,658,0.1553],[37547,"Havarna",26.65303,48.05475,98,0.0756],[37672,"Hiliseu-horia",26.29547,48.01218,119,0.0843],[149049,"Horodniceni",26.18095,47.52166,714,0.1009],[37770,"Hudesti",26.52637,48.1308,114,0.0874],[37823,"Ibanesti",26.39256,48.05163,119,0.1145],[147660,"Ilisesti",26.04924,47.60788,714,0.1057],[146281,"Ipotesti",26.28911,47.61947,714,0.3563],[37850,"Leorda",26.47504,47.82299,98,0.1316],[39942,"Lozna",26.27762,47.93523,122,0.0747],[37958,"Manoleasa",27.07185,47.99961,98,0.073],[38063,"Mihai Eminescu",26.56793,47.77611,98,0.3063],[38161,"Mihaileni",26.15104,47.96065,708,0.0607],[38241,"Mihalaseni",27.09298,47.88744,98,0.0761],[38321,"Mileanca",26.73331,48.07713,98,0.0693],[38376,"Mitoc",26.98775,48.1007,98,0.0654],[146325,"Mitocu Dragomirnei",26.23066,47.74816,714,0.2371],[149414,"Moara",26.20235,47.57977,714,0.1798],[35731,"Municipiul Botosani",26.67687,47.7444,714,0.0548],[36006,"Municipiul Dorohoi",26.42464,47.97658,98,0.0721],[146539,"Municipiul Falticeni",26.30677,47.4617,714,0.068],[146263,"Municipiul Suceava",26.26335,47.66959,679,0.0862],[38456,"Nicseni",26.65013,47.86859,98,0.2033],[36453,"Oras Bucecea",26.44868,47.76931,98,0.1239],[35946,"Oras Darabani",26.62059,48.17316,98,0.0563],[146370,"Oras Salcea",26.35648,47.64554,714,0.2771],[36060,"Oras Saveni",26.86516,47.96638,98,0.0988],[146655,"Oras Siret",26.06428,47.95138,702,0.0576],[39168,"Oras Stefanesti",27.19631,47.78825,98,0.0662],[38492,"Paltinis",26.68226,48.2212,114,0.1355],[149833,"Patrauti",26.18556,47.73492,714,0.2289],[38544,"Pomarla",26.3047,48.05493,119,0.0717],[149968,"Preutesti",26.41239,47.45136,658,0.0897],[35839,"Rachiti",26.70664,47.79715,98,0.4509],[150070,"Radaseni",26.25123,47.48541,658,0.1678],[38633,"Radauti-prut",26.82182,48.20076,98,0.0588],[38731,"Ripiceni",27.15391,47.90551,98,0.0713],[38811,"Roma",26.58773,47.84154,98,0.214],[38848,"Romanesti",27.23668,47.7149,480,0.0762],[146432,"Scheia",26.18041,47.64911,714,0.3394],[39122,"Sendriceni",26.33826,47.94043,119,0.1164],[151460,"Serbauti",26.14089,47.81733,714,0.1029],[150221,"Siminicea",26.39644,47.70755,714,0.1752],[35884,"Stauceni",26.77858,47.72914,98,0.366],[39220,"Stiubieni",26.7713,47.98748,98,0.0948],[150310,"Stroiesti",26.13075,47.61236,714,0.1654],[38982,"Suharau",26.42358,48.13124,98,0.0525],[150524,"Todiresti",26.07369,47.695,714,0.1358],[39328,"Trusesti",26.99258,47.76154,98,0.1133],[39417,"Ungureni",26.75994,47.90902,98,0.1599],[39532,"Unteni",26.78322,47.80406,98,0.2877],[39612,"Vaculesti",26.41527,47.89022,98,0.0825],[150891,"Valea Moldovei",26.01269,47.479,714,0.0622],[39694,"Varfu Campului",26.33354,47.84385,714,0.0984],[151022,"Veresti",26.47278,47.63275,714,0.1045],[39658,"Viisoara",26.74646,48.16193,114,0.0787],[39738,"Vladeni",26.51565,47.7128,98,0.1835],[39792,"Vlasinesti",26.91503,47.92433,98,0.1016],[39836,"Vorniceni",26.67269,47.97562,98,0.1043],[151157,"Vulturesti",26.41105,47.52037,714,0.079],[151246,"Zamostea",26.19849,47.86246,714,0.0882],[151344,"Zvoristea",26.26792,47.81776,714,0.1239],[175224,"Barsesti",26.75395,45.91703,905,0.044],[76040,"Cosmesti",27.3228,45.85009,427,0.1502],[76353,"Fundeni",27.56828,45.57044,752,0.0678],[76674,"Liesti",27.60041,45.62725,402,0.0696],[76692,"Matca",27.55531,45.85028,427,0.105],[43563,"Maxineni",27.64129,45.42359,174,0.126],[75258,"Munteni",27.46037,45.9083,427,0.1414],[76763,"Namoloasa",27.60226,45.5115,752,0.0832],[176855,"Nanesti",27.49494,45.56529,752,0.0574],[178885,"Negrilesti",26.6881,45.96111,3,0.0334],[77579,"Negrilesti",27.50603,45.95366,427,0.0698],[76807,"Nicoresti",27.30539,45.92583,427,0.0764],[174922,"Oras Marasesti",27.22872,45.89211,888,0.0591],[175055,"Oras Panciu",27.12418,45.88803,895,0.0627],[178910,"Paulesti",26.50924,45.88141,3,0.0332],[43929,"Scortaru Nou",27.61502,45.34093,174,0.1346],[178180,"Tifesti",27.1085,45.84964,888,0.0717],[178313,"Valea Sarii",26.81693,45.87303,888,0.0358],[178377,"Vidra",26.90745,45.91611,888,0.0384],[178545,"Vizantea-livezi",26.79988,45.96762,3,0.0327],[178750,"Vrancioaia",26.71132,45.86251,888,0.0313],[42824,"Baraganul",27.52372,44.81247,174,0.0684],[42842,"Bertestii De Jos",27.71659,44.84819,174,0.0893],[42913,"Bordei Verde",27.57931,45.05092,174,0.1071],[75711,"Branistea",27.82601,45.43932,752,0.1901],[159945,"Carcaliu",28.1466,45.18696,174,0.2383],[44560,"Cazasu",27.87705,45.26889,174,0.6089],[160127,"Cerna",28.29322,45.05387,174,0.1285],[42708,"Chiscani",27.94712,45.19774,174,0.4943],[61256,"Ciobanu",28.03684,44.71247,333,0.1423],[160305,"Daeni",28.1616,44.83334,174,0.0883],[43117,"Frecatei",28.07815,45.01482,174,0.1605],[61808,"Garliciu",28.10879,44.76379,319,0.0811],[43242,"Gemenele",27.63628,45.28057,174,0.1634],[160430,"Greci",28.24721,45.17613,174,0.1734],[160458,"Grindu",28.23325,45.41123,752,0.3759],[43313,"Gropeni",27.87313,45.05701,174,0.1935],[161525,"I.c.bratianu",28.05271,45.39259,174,0.2744],[76585,"Independenta",27.75895,45.47777,752,0.1432],[160617,"Jijila",28.15452,45.33977,752,0.4952],[43493,"Marasu",27.98051,45.00785,174,0.1654],[43652,"Movila Miresii",27.61295,45.20866,174,0.1514],[42682,"Municipiul Braila",27.95031,45.27051,752,0.3169],[75098,"Municipiul Galati",28.07846,45.48816,752,0.435],[60801,"Oras Harsova",27.92676,44.73159,319,0.0842],[43411,"Oras Insuratei",27.61309,44.93075,174,0.0923],[159730,"Oras Macin",28.14358,45.24526,174,0.2624],[161106,"Ostrov",28.16828,44.92056,174,0.111],[161151,"Peceneaga",28.15525,45.01519,174,0.138],[76996,"Piscu",27.7179,45.53207,752,0.1065],[43732,"Ramnicelu",27.53208,45.28167,174,0.1133],[43787,"Romanu",27.72437,45.30416,174,0.2292],[62823,"Saraiu",28.20118,44.71051,319,0.1015],[77153,"Schela",27.85267,45.51795,752,0.1744],[75114,"Sendreni",27.91171,45.44343,752,0.2929],[43992,"Silistea",27.79765,45.33892,174,0.2809],[161286,"Smardan",28.0665,45.31763,752,0.421],[77224,"Smardan",27.9224,45.5761,752,0.1628],[44060,"Stancuta",27.83935,44.91003,174,0.1115],[44177,"Tichilesti",27.89195,45.14315,174,0.3104],[44202,"Traian",27.69195,45.14426,174,0.1774],[77313,"Tudor Vladimirescu",27.65776,45.55722,752,0.0875],[44257,"Tudor Vladimirescu",27.76466,45.22983,174,0.289],[44300,"Tufesti",27.78089,44.9924,174,0.1317],[161464,"Turcoaia",28.19383,45.10318,174,0.1774],[44355,"Unirea",27.76744,45.09845,174,0.1884],[161543,"Vacareni",28.20321,45.31629,752,0.3303],[44391,"Vadeni",27.92701,45.35403,174,0.3508],[75150,"Vanatori",27.99925,45.51718,752,0.2529],[44435,"Victoria",27.66544,44.79726,174,0.0771],[44505,"Viziru",27.70578,45.01895,174,0.128],[159785,"Baia",28.64412,44.74772,319,0.1199],[159847,"Beidaud",28.51911,44.70045,319,0.128],[161552,"Bestepe",29.01905,45.10035,778,0.2209],[159883,"C.a. Rosetti",29.55959,45.29688,319,0.0661],[159963,"Casimcea",28.35268,44.7482,319,0.106],[160092,"Ceamurlia De Jos",28.76924,44.73035,319,0.1283],[160047,"Ceatalchioi",28.8169,45.27458,778,0.2662],[160172,"Chilia Veche",29.32688,45.34499,778,0.0844],[160225,"Ciucurova",28.45526,44.91821,174,0.0783],[61372,"Cogealac",28.57587,44.54811,319,0.1861],[160261,"Crisan",29.29772,45.19146,778,0.0891],[61559,"Crucea",28.20412,44.54374,319,0.1495],[160323,"Dorobantu",28.30519,44.9494,174,0.1005],[63334,"Fantanele",28.57009,44.61951,319,0.1627],[160387,"Frecatei",28.64791,45.11864,778,0.2296],[61826,"Ghindaresti",28.04697,44.63158,319,0.1015],[160476,"Hamcearca",28.36258,45.17549,752,0.1324],[63278,"Horia",28.11556,44.63026,319,0.1087],[160528,"Horia",28.4311,45.03321,752,0.0966],[62020,"Istria",28.7461,44.5574,319,0.2054],[160564,"Izvoarele",28.52511,45.06168,778,0.1004],[160644,"Jurilovca",28.91334,44.76761,319,0.1234],[160680,"Luncavita",28.30041,45.28117,752,0.2302],[160724,"Mahmudia",29.10032,45.09299,778,0.1679],[160779,"Maliuc",29.08095,45.1863,778,0.1845],[160831,"Mihai Bravu",28.65468,44.95681,778,0.1076],[62253,"Mihai Viteazu",28.8912,44.63772,319,0.1663],[160877,"Mihail Kogalniceanu",28.72701,45.02667,778,0.2134],[159614,"Municipiul Tulcea",28.81752,45.14981,752,0.0893],[160911,"Murighiol",29.1457,44.94488,778,0.1054],[160993,"Nalbant",28.56626,44.97032,778,0.1038],[161035,"Niculitel",28.47783,45.18956,752,0.1256],[161053,"Nufaru",28.93824,45.13437,778,0.3968],[159650,"Oras Babadag",28.71933,44.88733,778,0.0937],[159687,"Oras Isaccea",28.46286,45.25751,752,0.1552],[159767,"Oras Sulina",29.54593,45.13345,319,0.0784],[62609,"Pantelimon",28.34251,44.5906,319,0.1548],[161133,"Pardina",29.07473,45.29451,778,0.16],[161179,"Sarichioi",28.86941,44.92704,778,0.1161],[161231,"Sfantu Gheorghe",29.45758,44.91258,319,0.1004],[161259,"Slava Cercheza",28.57565,44.88098,319,0.0802],[161302,"Somova",28.65746,45.19432,778,0.2417],[161348,"Stejaru",28.52217,44.7869,319,0.1023],[161384,"Topolog",28.33818,44.8597,174,0.0823],[161482,"Valea Nucarilor",28.9194,45.02684,778,0.234],[161561,"Valea Teilor",28.48466,45.12253,752,0.1058],[63170,"Vulturu",28.27918,44.64918,319,0.126],[146860,"Arbore",25.90489,47.73602,702,0.0633],[151576,"Berchisesti",26.03794,47.52653,720,0.0757],[147036,"Bilca",25.76363,47.92686,726,0.1021],[147161,"Botosana",25.93903,47.68336,636,0.0779],[147205,"Breaza",25.3316,47.63285,714,0.0336],[147241,"Brodina",25.40323,47.85156,711,0.0434],[151521,"Burla",25.92955,47.78457,702,0.1172],[147526,"Cacica",25.86609,47.65129,714,0.0579],[151503,"Capu Campului",25.94215,47.50479,670,0.1053],[147713,"Carlibaba",25.09028,47.61255,714,0.0324],[151451,"Ciocanesti",25.23352,47.49174,722,0.0563],[151433,"Comanesti",25.99843,47.66131,714,0.0879],[151497,"Cosna",25.12131,47.41614,722,0.0573],[148202,"Dorna Candrenilor",25.22089,47.30574,722,0.0987],[148131,"Dorna-arini",25.46466,47.35912,722,0.107],[148293,"Dornesti",26.00496,47.88471,702,0.1432],[151488,"Fantana Mare",26.30367,47.41192,658,0.1479],[148667,"Fratautii Noi",25.85242,47.94702,702,0.1004],[148694,"Fratautii Vechi",25.91108,47.89441,702,0.2058],[148729,"Frumosu",25.63919,47.6352,714,0.0416],[148765,"Fundu Moldovei",25.32281,47.55417,638,0.0428],[148872,"Galanesti",25.82197,47.90413,702,0.0892],[149101,"Horodnic De Jos",25.8378,47.86916,702,0.1335],[151479,"Horodnic De Sus",25.7878,47.83846,702,0.0814],[149138,"Iacobeni",25.29961,47.42995,722,0.1434],[151442,"Iaslovat",25.97403,47.75762,702,0.0669],[149183,"Izvoarele Sucevei",25.19746,47.76372,714,0.0345],[149370,"Manastirea Humorului",25.84802,47.60509,714,0.0516],[149290,"Marginea",25.83232,47.7985,702,0.0652],[149502,"Moldova-sulita",25.23326,47.68315,714,0.0337],[149539,"Moldovita",25.45637,47.73081,714,0.0379],[146502,"Municipiul Campulung Moldovenesc",25.57507,47.49963,714,0.0389],[146628,"Municipiul Radauti",25.92982,47.84781,728,0.0525],[146744,"Municipiul Vatra Dornei",25.34498,47.36588,638,0.0361],[149584,"Musenita",25.97773,47.95847,702,0.0733],[147633,"Oras Cajvana",25.98713,47.71183,714,0.0818],[148612,"Oras Frasin",25.80231,47.51022,670,0.1118],[146584,"Oras Gura Humorului",25.87875,47.52299,662,0.068],[146931,"Oras Milisauti",26.00314,47.78729,702,0.0894],[146708,"Oras Solca",25.819,47.71098,684,0.0603],[151095,"Oras Vicovu De Sus",25.65763,47.92638,725,0.0681],[149753,"Paltinoasa",25.97828,47.55105,714,0.0686],[149682,"Panaci",25.44432,47.20284,722,0.0402],[149780,"Partestii De Jos",25.95059,47.6148,714,0.0739],[149851,"Poiana Stampei",25.11695,47.24336,722,0.0434],[151585,"Poieni-solca",25.88358,47.68828,629,0.0664],[149931,"Pojorata",25.43383,47.47539,638,0.0889],[150043,"Putna",25.59078,47.84547,726,0.0865],[150178,"Sadova",25.45309,47.58065,638,0.0708],[150445,"Saru Dornei",25.28004,47.21001,722,0.0518],[150196,"Satu Mare",26.0063,47.83138,702,0.157],[150294,"Straja",25.52542,47.90767,726,0.1092],[150418,"Sucevita",25.68467,47.77278,684,0.0707],[150702,"Ulma",25.2695,47.85724,714,0.0357],[150935,"Vama",25.70843,47.57109,638,0.0531],[150980,"Vatra Moldovitei",25.54063,47.62795,638,0.0417],[151077,"Vicovu De Jos",25.70369,47.88274,726,0.1409],[151558,"Voitinel",25.76558,47.88137,725,0.1124],[151120,"Volovat",25.89805,47.80593,702,0.1924],[75668,"Baleni",27.82916,45.79922,752,0.0666],[75686,"Baneasa",27.97403,45.93187,752,0.0566],[76004,"Corni",27.7667,45.84042,752,0.0526],[76111,"Costache Negri",27.73516,45.70721,752,0.0694],[76139,"Cuca",27.90426,45.73943,752,0.0872],[76157,"Cudalbi",27.69388,45.77179,752,0.0577],[77595,"Cuza Voda",27.82872,45.58974,752,0.1218],[76255,"Fartanesti",27.96433,45.80505,752,0.0782],[76282,"Foltesti",28.08349,45.72477,752,0.1104],[76317,"Frumusita",28.07299,45.66358,752,0.1428],[76558,"Grivita",27.6619,45.69841,752,0.0617],[76718,"Mastacani",28.0555,45.77406,752,0.0946],[76932,"Oancea",28.08219,45.91642,752,0.0669],[75472,"Oras Targu Bujor",27.92983,45.87568,752,0.0634],[76969,"Pechea",27.79093,45.64991,752,0.0985],[77082,"Rediu",27.8514,45.71129,752,0.0862],[77126,"Scanteiesti",27.9778,45.70108,752,0.1104],[77180,"Slobozia Conachi",27.76469,45.57947,752,0.1086],[77260,"Smulti",27.74463,45.91486,752,0.044],[77601,"Suhurlui",27.81915,45.73818,752,0.0751],[77331,"Tulucesti",28.01906,45.5966,752,0.1803],[77475,"Valea Marului",27.66758,45.84415,406,0.0463],[77536,"Vladesti",28.07453,45.83873,752,0.079],[60598,"23 August",28.55357,43.9241,319,0.2407],[60883,"Adamclisi",27.95448,44.12113,319,0.1658],[60570,"Agigea",28.60108,44.09138,319,0.5648],[60945,"Albesti",28.40008,43.81486,319,0.1955],[61005,"Aliman",27.84694,44.18358,319,0.1451],[63198,"Amzacea",28.35642,43.94828,319,0.2508],[63294,"Baraganu",28.39587,44.08925,319,0.3501],[61121,"Castelu",28.38101,44.28476,319,0.2974],[61167,"Cerchezu",28.10212,43.8431,319,0.187],[61210,"Chirnogeni",28.21452,43.92242,319,0.2152],[61283,"Ciocarlia",28.26855,44.13617,319,0.2542],[61318,"Cobadin",28.19518,44.04637,319,0.24],[61452,"Comana",28.347,43.89563,319,0.2201],[61513,"Corbu",28.68791,44.42295,319,0.294],[63286,"Costinesti",28.61439,43.95144,319,0.2597],[61620,"Cumpana",28.51913,44.11188,319,0.5768],[63300,"Cuza Voda",28.31875,44.30844,319,0.2363],[61675,"Deleni",28.03512,44.06087,319,0.1858],[61737,"Dobromir",27.82067,44.01298,319,0.1495],[63161,"Dumbraveni",27.98884,43.91018,319,0.173],[63326,"Gradina",28.44919,44.53021,319,0.1881],[61871,"Independenta",28.06502,43.93499,319,0.188],[61951,"Ion Corvin",27.80734,44.10486,319,0.1354],[60632,"Limanu",28.50774,43.77195,341,0.2851],[62057,"Lipnita",27.56045,44.0877,319,0.117],[63152,"Lumina",28.54316,44.31134,319,0.3226],[62137,"Mereni",28.34293,44.01472,319,0.2772],[62191,"Mihail Kogalniceanu",28.49038,44.36845,319,0.2961],[62280,"Mircea Voda",28.19241,44.29574,319,0.1853],[60419,"Municipiul Constanta",28.59615,44.1864,304,0.1098],[60482,"Municipiul Mangalia",28.55412,43.83671,319,0.252],[60847,"Municipiul Medgidia",28.27408,44.23222,319,0.2819],[62440,"Nicolae Balcescu",28.34826,44.40442,319,0.2321],[62486,"Oltina",27.65707,44.15578,319,0.1216],[61069,"Oras Baneasa",27.71171,44.05644,319,0.1332],[60776,"Oras Cernavoda",28.04201,44.32761,319,0.1664],[60455,"Oras Eforie",28.63392,44.06704,319,0.3713],[62360,"Oras Murfatlar",28.38056,44.1681,319,0.3593],[60507,"Oras Navodari",28.60306,44.3306,319,0.4287],[62397,"Oras Negru Voda",28.25929,43.80222,319,0.2019],[60687,"Oras Ovidiu",28.51057,44.25468,319,0.5579],[60534,"Oras Techirghiol",28.58765,44.0412,319,0.3511],[62538,"Ostrov",27.40071,44.08293,319,0.1084],[62672,"Pecineaga",28.47077,43.8865,319,0.2087],[62707,"Pestera",28.11927,44.19549,319,0.1912],[62761,"Poarta Alba",28.39456,44.22527,319,0.3478],[62798,"Rasova",27.97622,44.24059,319,0.1578],[62878,"Sacele",28.634,44.48466,319,0.2363],[63318,"Saligny",28.10077,44.30257,312,0.2686],[62903,"Seimeni",28.10388,44.38851,319,0.1589],[62949,"Silistea",28.22881,44.43532,319,0.183],[62985,"Targusor",28.40944,44.46774,319,0.2146],[63045,"Topalu",28.09055,44.54155,319,0.1318],[63072,"Topraisar",28.48034,44.02515,319,0.3478],[63189,"Tortoman",28.24815,44.3551,319,0.199],[60721,"Tuzla",28.60611,43.99375,319,0.3151],[63125,"Valu Lui Traian",28.48425,44.16771,319,0.5942]];      // [siruta, nume, lon, lat, id centru, PROB_MAX]
-const CENTERS = [{"id":480,"name":"Iași","lon":27.58869,"lat":47.15739,"mass":253033.0,"n":107},{"id":319,"name":"Constanța","lon":28.59615,"lat":44.1864,"mass":252413.0,"n":76},{"id":752,"name":"Galați","lon":28.07846,"lat":45.48816,"mass":172410.0,"n":49},{"id":174,"name":"Brăila","lon":27.95031,"lat":45.27051,"mass":155663.0,"n":53},{"id":3,"name":"Bacău","lon":26.90842,"lat":46.56602,"mass":129581.0,"n":82},{"id":228,"name":"Buzău","lon":26.8156,"lat":45.13834,"mass":101446.0,"n":83},{"id":98,"name":"Botoșani","lon":26.67687,"lat":47.7444,"mass":94054.0,"n":57},{"id":714,"name":"Suceava","lon":26.26335,"lat":47.66959,"mass":81528.0,"n":54},{"id":585,"name":"Piatra Neamț","lon":26.36225,"lat":46.92186,"mass":75967.0,"n":40},{"id":778,"name":"Tulcea","lon":28.81752,"lat":45.14981,"mass":65728.0,"n":18},{"id":860,"name":"Vaslui","lon":27.73612,"lat":46.64899,"mass":60114.0,"n":30},{"id":888,"name":"Focșani","lon":27.20427,"lat":45.696,"mass":57349.0,"n":36},{"id":790,"name":"Bârlad","lon":27.67203,"lat":46.22799,"mass":52565.0,"n":40},{"id":595,"name":"Roman","lon":26.94566,"lat":46.93548,"mass":46200.0,"n":18},{"id":56,"name":"Onești","lon":26.7834,"lat":46.25678,"mass":36150.0,"n":14},{"id":19,"name":"Moinești","lon":26.46374,"lat":46.472,"mass":35997.0,"n":6},{"id":427,"name":"Tecuci","lon":27.41901,"lat":45.84733,"mass":32809.0,"n":10},{"id":499,"name":"Pașcani","lon":26.72155,"lat":47.24868,"mass":28747.0,"n":15},{"id":822,"name":"Huși","lon":28.08605,"lat":46.67397,"mass":25574.0,"n":5},{"id":702,"name":"Rădăuți","lon":25.92982,"lat":47.84781,"mass":24481.0,"n":16},{"id":276,"name":"Râmnicu Sărat","lon":27.08813,"lat":45.40901,"mass":23118.0,"n":6},{"id":658,"name":"Fălticeni","lon":26.30677,"lat":47.4617,"mass":22533.0,"n":8},{"id":119,"name":"Dorohoi","lon":26.42464,"lat":47.97658,"mass":20530.0,"n":7},{"id":610,"name":"Târgu Neamț","lon":26.37435,"lat":47.20366,"mass":20489.0,"n":9},{"id":638,"name":"Câmpulung Moldovenesc","lon":25.57507,"lat":47.49963,"mass":15843.0,"n":8},{"id":869,"name":"Adjud","lon":27.18775,"lat":46.11513,"mass":14786.0,"n":6},{"id":722,"name":"Vatra Dornei","lon":25.34498,"lat":47.36588,"mass":14198.0,"n":8}]; // {id, name, lon, lat, mass, n}
+window.AIRPORTS=window.AIRPORTS||{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"code":"BCM","name":"Bacău George Enescu","uats":314},"geometry":{"type":"Point","coordinates":[26.9103,46.5219]}},{"type":"Feature","properties":{"code":"SCV","name":"Suceava Ștefan cel Mare","uats":217},"geometry":{"type":"Point","coordinates":[26.3541,47.6875]}},{"type":"Feature","properties":{"code":"IAS","name":"Iași International","uats":143},"geometry":{"type":"Point","coordinates":[27.6206,47.1785]}},{"type":"Feature","properties":{"code":"CND","name":"Mihail Kogălniceanu International","uats":100},"geometry":{"type":"Point","coordinates":[28.4883,44.3622]}}]};
+</script>
 
-// ColorBrewer YlOrRd (7 clase)
-const YLORRD = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'];
-
-// praguri pe cuantile ale PROB_MAX (globale, ca să fie comparabile între centre)
-const probs = PTS.map(p=>p[5]).sort((a,b)=>a-b);
-const BREAKS = [];
-for (let i=1;i<7;i++) BREAKS.push(probs[Math.floor(i*probs.length/7)]);
-const fmt = v => (v*100).toFixed(1).replace('.',',')+'%';
-function colorFor(v){ let i=0; while(i<BREAKS.length && v>=BREAKS[i]) i++; return YLORRD[i]; }
-
-const centerById = Object.fromEntries(CENTERS.map(c=>[c.id,c]));
-
-const map = L.map('map',{zoomControl:true});
-const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-  {attribution:'Esri, HERE, Garmin, USGS',maxZoom:18}).addTo(map);
-const transp = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
-  {maxZoom:18,opacity:.9}).addTo(map);
-
-const ptsLayer = L.layerGroup().addTo(map);
-const areaLayer = L.layerGroup().addTo(map);
-const lineLayer = L.layerGroup().addTo(map);
-const centerLayer = L.layerGroup().addTo(map);
-
-// anvelopa convexă (Andrew monotone chain) pentru aria de influență
-function hull(pts){
-  pts = pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
-  if (pts.length<3) return pts;
-  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
-  const lo=[],up=[];
-  for (const p of pts){ while(lo.length>=2&&cross(lo[lo.length-2],lo[lo.length-1],p)<=0) lo.pop(); lo.push(p); }
-  for (let i=pts.length-1;i>=0;i--){ const p=pts[i]; while(up.length>=2&&cross(up[up.length-2],up[up.length-1],p)<=0) up.pop(); up.push(p); }
-  lo.pop(); up.pop(); return lo.concat(up);
-}
-
-// control: selector
-const Ctrl = L.control({position:'topleft'});
-Ctrl.onAdd = function(){
-  const d = L.DomUtil.create('div','panel ctrl');
-  d.innerHTML =
-    '<h1>Centre de atracție – model Huff</h1>'+
-    '<select id="sel"></select>'+
-    '<label><input type="checkbox" id="chkArea" checked> Arie de influență</label>'+
-    '<label><input type="checkbox" id="chkLines"> Legături către centru</label>'+
-    '<div id="info"></div>'+
-    '<div class="note">Culoare = probabilitatea maximă Huff (PROB_MAX) a localității de a fi atrasă de centrul ei principal.</div>';
-  L.DomEvent.disableClickPropagation(d);
-  return d;
-};
-Ctrl.addTo(map);
-
-const sel = document.getElementById('sel');
-sel.innerHTML = '<option value="all">Toate centrele (centrul principal al fiecărei localități)</option>' +
-  CENTERS.map(c=>`<option value="${c.id}">${c.name} (${c.n} localități)</option>`).join('') +
-  '<option value="other">Alte centre locale</option>';
-
-// legendă
-const Leg = L.control({position:'bottomright'});
-Leg.onAdd = function(){
-  const d = L.DomUtil.create('div','panel legend');
-  let h = '<h2>Probabilitate maximă (PROB_MAX)</h2>';
-  for (let i=0;i<7;i++){
-    const lo = i===0 ? probs[0] : BREAKS[i-1];
-    const hi = i===6 ? probs[probs.length-1] : BREAKS[i];
-    h += `<div><i style="background:${YLORRD[i]}"></i>${fmt(lo)} – ${fmt(hi)}</div>`;
+<!-- ===================== MAIN: map, basemaps, airports ===================== -->
+<script>
+(function () {
+  if (!window.ISO || !window.M2_OUTLINE) {
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="panel" style="left:14px;top:14px;padding:12px 16px;font-size:13px">Data missing: <b>' + [!window.ISO && 'window.ISO (assets/m2/isochrones.js)', !window.M2_OUTLINE && 'window.M2_OUTLINE (assets/m2/isochrones.js)'].filter(Boolean).join(' and ') + '</b> not found. Check the file is in assets/m2/ and that it starts with that variable name.</div>');
+    return;
   }
-  d.innerHTML = h; return d;
-};
-Leg.addTo(map);
+  const ISO = window.ISO, META = window.ISO_META, STEP = META.step, NB = META.bands;
+  const COLORS = ['#0b2545','#103a68','#13518a','#1f7a8c','#2a9d8f','#6dbb8a','#a8c97f',
+                  '#e9c46a','#f0b25e','#f4a261','#ef8a56','#e76f51','#c8553d','#8f2d2a'];
+  const col = b => COLORS[Math.min(b, COLORS.length - 1)];
+  const lbl = b => (b * STEP) + '–' + ((b + 1) * STEP);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const apName = {}; window.AIRPORTS.features.forEach(a => apName[a.properties.code] = a.properties.name);
 
-function draw(){
-  ptsLayer.clearLayers(); areaLayer.clearLayers(); lineLayer.clearLayers(); centerLayer.clearLayers();
-  const v = sel.value;
-  const showArea = document.getElementById('chkArea').checked;
-  const showLines = document.getElementById('chkLines').checked;
+  const state = { T: NB * STEP, ap: null };
+
+  const map = L.map('map', { preferCanvas: true, zoomSnap: 0.25 });
+  window.leafletMap = map;
+
+  // ---- basemaps (Esri tiles need no key) ----
+  map.createPane('labels'); map.getPane('labels').style.zIndex = 450; map.getPane('labels').style.pointerEvents = 'none';
+  map.createPane('m2');     map.getPane('m2').style.zIndex = 430;     map.getPane('m2').style.pointerEvents = 'none';
+  const esri = (svc, o) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + svc + '/MapServer/tile/{z}/{y}/{x}',
+    Object.assign({ attribution: 'Tiles &copy; Esri', maxZoom: 16 }, o || {}));
+  const gray = L.layerGroup([esri('Canvas/World_Light_Gray_Base'), esri('Canvas/World_Light_Gray_Reference', { pane: 'labels' })]);
+  const streets = esri('World_Street_Map');
+  const imagery = L.layerGroup([esri('World_Imagery'), esri('Reference/World_Boundaries_and_Places', { pane: 'labels' })]);
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 });
+  const topo = esri('World_Topo_Map');
+  const roadsRef = esri('Reference/World_Transportation', { pane: 'labels' }); // draws above the analysis layers
+  topo.addTo(map);
+  roadsRef.addTo(map);
+  L.control.layers(
+    { 'Esri Topo': topo, 'Light gray': gray, 'Streets': streets, 'Satellite': imagery, 'OpenStreetMap': osm },
+    { 'Esri roads & transportation': roadsRef },
+    { position: 'topleft', collapsed: true }).addTo(map);
+
+  // ---- isochrone bands (50% transparency) ----
+  function style(f) {
+    const p = f.properties;
+    const on = p.to <= state.T && (!state.ap || p.ap === state.ap);
+    return { fillColor: col(p.band), fillOpacity: on ? (p.est ? 0.25 : 0.5) : 0.04, stroke: on, color: p.est ? '#475569' : '#fff', weight: 0.5, opacity: 0.6, dashArray: p.est ? '3 3' : null };
+  }
+
   const info = document.getElementById('info');
-  let rows;
-  if (v==='all') rows = PTS;
-  else if (v==='other') rows = PTS.filter(p=>!centerById[p[4]]);
-  else rows = PTS.filter(p=>p[4]===+v);
+  const geo = L.geoJSON(ISO, {
+    style,
+    onEachFeature: (f, layer) => {
+      layer.on('mouseover', () => {
+        const p = f.properties;
+        layer.setStyle({ weight: 2, color: '#0b2545', opacity: 1 });
+        layer.bringToFront();
+        info.innerHTML = '<div class="t">' + (apName[p.ap] || p.ap) + '</div>' +
+          '<div class="big">' + p.from + '–' + p.to + ' min</div>' +
+          '<div class="m">' + fmt(p.pop) + ' people · ' + fmt(p.km2) + ' km²</div>' +
+          (p.est ? '<div class="m"><i>estimated (nearest airport was removed)</i></div>' : '<div class="m"><i>measured</i></div>');
+      });
+      layer.on('mouseout', () => geo.resetStyle(layer));
+    }
+  });   // NOT added to the map: it appears when the Airport section is opened
 
-  rows.forEach(p=>{
-    const c = centerById[p[4]];
-    const m = L.circleMarker([p[3],p[2]],{
-      radius: v==='all'?4.5:6, color:'#333', weight:.6,
-      fillColor: colorFor(p[5]), fillOpacity:.85
+  // ---- M2 outline: the only layer that is always on ----
+  const outline = L.geoJSON(window.M2_OUTLINE, { pane: 'm2', style: { fill: false, color: '#0b2545', weight: 1.6, opacity: .95 }, interactive: false }).addTo(map);
+  map.fitBounds(outline.getBounds(), { padding: [20, 20] });
+
+  // ---- airport markers (also only while the section is open) ----
+  const used = new Set(ISO.features.map(f => f.properties.ap));
+  const markers = {};
+  window.AIRPORTS.features.forEach(a => {
+    const p = a.properties; if (!used.has(p.code)) return;
+    const m = L.marker([a.geometry.coordinates[1], a.geometry.coordinates[0]], {
+      icon: L.divIcon({ className: '', html: '<div class="apin" id="pin-' + p.code + '">✈</div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+      zIndexOffset: 1000 });
+    m.bindTooltip(p.code, { permanent: true, direction: 'right', offset: [12, 0], className: 'aplabel' });
+    m.on('click', () => { state.ap = state.ap === p.code ? null : p.code; refresh(); });
+    markers[p.code] = m;
+  });
+  const airLayer = L.layerGroup([geo].concat(Object.values(markers)));
+
+  const $ = id => document.getElementById(id);
+
+  function refresh() {
+    geo.setStyle(style);
+    $('tval').textContent = state.T;
+    const sel = ISO.features.filter(f => !state.ap || f.properties.ap === state.ap).map(f => f.properties);
+    const inT = sel.filter(p => p.to <= state.T);
+    const pop = inT.reduce((s, p) => s + p.pop, 0), km2 = inT.reduce((s, p) => s + p.km2, 0);
+    $('s-pop').textContent = (100 * pop / META.totalPop).toFixed(1) + '%';
+    $('s-km2').textContent = fmt(km2);
+    const ep = inT.filter(p => p.est).reduce((s, p) => s + p.pop, 0);
+    $('s-est').textContent = pop ? 'of which estimated: ' + (100 * ep / pop).toFixed(0) + '%' : '';
+    const byBand = Array(NB).fill(0);
+    sel.forEach(p => byBand[p.band] += p.pop);
+    $('legend').innerHTML = '<div class="hd"><span>Drive time (min)</span><span>people</span></div>' +
+      byBand.map((v, b) => '<div class="it' + ((b + 1) * STEP > state.T ? ' off' : '') + '"><span class="sw" style="background:' + col(b) +
+        '"></span>' + lbl(b) + '<span class="n">' + fmt(v) + '</span></div>').join('') +
+      '<div class="it" style="margin-top:6px"><span class="sw" style="background:#cbd5e1;border:1px dashed #475569"></span>lighter, dashed = estimated</div>';
+    $('sel').style.display = state.ap ? 'block' : 'none';
+    $('sel-t').textContent = state.ap ? (apName[state.ap] || state.ap) : '';
+    Object.keys(markers).forEach(k => { const el = document.getElementById('pin-' + k); if (el) el.classList.toggle('sel', state.ap === k); });
+  }
+
+  $('clear').onclick = () => { state.ap = null; refresh(); };
+  $('slider').addEventListener('input', e => { state.T = +e.target.value; refresh(); });
+
+  let timer = null;
+  function stop() { clearInterval(timer); timer = null; $('play').textContent = '▶'; }
+  $('play').onclick = () => {
+    if (timer) return stop();
+    state.T = STEP; $('slider').value = state.T; refresh();
+    $('play').textContent = '❚❚';
+    timer = setInterval(() => {
+      if (state.T >= NB * STEP) return stop();
+      state.T += STEP; $('slider').value = state.T; refresh();
+    }, 700);
+  };
+
+  $('slider').max = NB * STEP; $('slider').value = state.T;
+  refresh();
+
+  // ---- accordion: open = layer on, close = layer off + reset ----
+  $('air').addEventListener('toggle', function () {
+    if (this.open) {
+      airLayer.addTo(map);
+      info.style.display = '';
+    } else {
+      map.removeLayer(airLayer);
+      info.style.display = 'none';
+      stop(); state.ap = null; state.T = NB * STEP;
+      $('slider').value = state.T; refresh();
+    }
+  });
+})();
+</script>
+
+<!-- ===================== ROADS: OSM via Overpass, M2 analysis ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap;
+  if (!map || !window.M2_OUTLINE) return;
+  const G = { lon0: 24.4, lat0: 43.3, lon1: 30.2, lat1: 48.8, step: 0.025 };
+  G.nx = Math.ceil((G.lon1 - G.lon0) / G.step);
+  G.ny = Math.ceil((G.lat1 - G.lat0) / G.step);
+  const KY = 110.57, kx = lat => 111.32 * Math.cos(lat * Math.PI / 180);
+  const CLS = {
+    motorway: { name: 'Motorways',   color: '#d62828', weight: 3.5 },
+    euro:     { name: 'E-roads',     color: '#f77f00', weight: 2.5 },
+    county:   { name: 'County (DJ)', color: '#6a4c93', weight: 1.2 }
+  };
+  const BB = [G.lat0, G.lon0, G.lat1, G.lon1].join(',');
+  const HW = '"highway"~"^(trunk|primary|secondary|tertiary)$"';
+  const Q = {
+    motorway: 'way["highway"="motorway"](' + BB + ');',
+    euro: 'way[' + HW + ']["int_ref"~"(^|;)E ?[0-9]"](' + BB + ');way[' + HW + ']["ref"~"(^|;)E ?[0-9]"](' + BB + ');',
+    county: 'way["highway"]["ref"~"^DJ ?[0-9]"](' + BB + ');'
+  };
+  const EP = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  const data = {}, layers = {}, shown = new Set();
+  let mask = null, areaKm2 = 0, overlay = null;
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+
+  map.createPane('rsurf').style.zIndex = 410;
+  map.createPane('roads').style.zIndex = 420;
+  map.getPane('rsurf').style.pointerEvents = 'none';
+  map.getPane('roads').style.pointerEvents = 'none';
+
+  const cellIdx = (lon, lat) => {
+    const i = Math.floor((lon - G.lon0) / G.step), j = Math.floor((lat - G.lat0) / G.step);
+    return (i < 0 || j < 0 || i >= G.nx || j >= G.ny) ? -1 : j * G.nx + i;
+  };
+
+  // rasterise the M2 outline once (point-in-polygon per cell)
+  function ensureMask() {
+    if (mask) return;
+    const rings = [];
+    window.M2_OUTLINE.geometry.coordinates.forEach(poly => poly.forEach(r => rings.push(r)));
+    mask = new Uint8Array(G.nx * G.ny);
+    for (let j = 0; j < G.ny; j++) {
+      const lat = G.lat0 + (j + .5) * G.step;
+      for (let i = 0; i < G.nx; i++) {
+        const lon = G.lon0 + (i + .5) * G.step;
+        let inside = false;
+        for (const r of rings) {
+          for (let a = 0, b = r.length - 1; a < r.length; b = a++) {
+            const xa = r[a][0], ya = r[a][1], xb = r[b][0], yb = r[b][1];
+            if ((ya > lat) !== (yb > lat) && lon < (xb - xa) * (lat - ya) / (yb - ya) + xa) inside = !inside;
+          }
+        }
+        if (inside) { mask[j * G.nx + i] = 1; areaKm2 += G.step * kx(lat) * G.step * KY; }
+      }
+    }
+  }
+
+  async function fetchClass(c) {
+    const body = 'data=' + encodeURIComponent('[out:json][timeout:120];(' + Q[c] + ');out geom qt;');
+    let last;
+    for (const ep of EP) {
+      try {
+        const r = await fetch(ep, { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        return j.elements.filter(e => e.type === 'way' && e.geometry).map(e => ({ g: e.geometry.map(p => [p.lat, p.lon]) }));
+      } catch (e) { last = e; }
+    }
+    throw last;
+  }
+
+  function lengthKm(c) {
+    let km = 0;
+    data[c].forEach(w => {
+      for (let k = 1; k < w.g.length; k++) {
+        const a = w.g[k - 1], b = w.g[k];
+        const mlat = (a[0] + b[0]) / 2, mlon = (a[1] + b[1]) / 2;
+        const idx = cellIdx(mlon, mlat);
+        if (idx < 0 || !mask[idx]) continue;
+        km += Math.hypot((b[1] - a[1]) * kx(mlat), (b[0] - a[0]) * KY);
+      }
     });
-    m.bindTooltip(`<b>${p[1]}</b><br>SIRUTA ${p[0]}<br>Centru principal: ${c?c.name:'centru local (ID '+p[4]+')'}<br>PROB_MAX: ${fmt(p[5])}`);
-    m.addTo(ptsLayer);
+    return km;
+  }
+
+  // two-pass chamfer distance transform (km) from the ticked road classes
+  function distanceGrid() {
+    const D = new Float32Array(G.nx * G.ny).fill(1e9);
+    shown.forEach(c => data[c].forEach(w => {
+      for (let k = 1; k < w.g.length; k++) {
+        const a = w.g[k - 1], b = w.g[k];
+        const n = Math.max(1, Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) / (G.step / 2)));
+        for (let t = 0; t <= n; t++) {
+          const idx = cellIdx(a[1] + (b[1] - a[1]) * t / n, a[0] + (b[0] - a[0]) * t / n);
+          if (idx >= 0) D[idx] = 0;
+        }
+      }
+    }));
+    const dy = G.step * KY, nx = G.nx;
+    for (let j = 0; j < G.ny; j++) {
+      const dx = G.step * kx(G.lat0 + (j + .5) * G.step), dd = Math.hypot(dx, dy);
+      for (let i = 0; i < nx; i++) {
+        const p = j * nx + i; let v = D[p];
+        if (i > 0) v = Math.min(v, D[p - 1] + dx);
+        if (j > 0) {
+          v = Math.min(v, D[p - nx] + dy);
+          if (i > 0) v = Math.min(v, D[p - nx - 1] + dd);
+          if (i < nx - 1) v = Math.min(v, D[p - nx + 1] + dd);
+        }
+        D[p] = v;
+      }
+    }
+    for (let j = G.ny - 1; j >= 0; j--) {
+      const dx = G.step * kx(G.lat0 + (j + .5) * G.step), dd = Math.hypot(dx, dy);
+      for (let i = nx - 1; i >= 0; i--) {
+        const p = j * nx + i; let v = D[p];
+        if (i < nx - 1) v = Math.min(v, D[p + 1] + dx);
+        if (j < G.ny - 1) {
+          v = Math.min(v, D[p + nx] + dy);
+          if (i < nx - 1) v = Math.min(v, D[p + nx + 1] + dd);
+          if (i > 0) v = Math.min(v, D[p + nx - 1] + dd);
+        }
+        D[p] = v;
+      }
+    }
+    return D;
+  }
+
+  const bandRGB = d => d <= 15 ? [42, 157, 143] : d <= 30 ? [168, 201, 127] : d <= 60 ? [244, 162, 97] : [200, 85, 61];
+
+  function update() {
+    ensureMask();
+    const on = Object.keys(CLS).filter(c => shown.has(c));
+    let h = '';
+    if (on.length) {
+      h += '<table class="rt"><tr><th></th><th>km in M2</th><th>km / 1000 km²</th></tr>';
+      on.forEach(c => { const km = lengthKm(c); h += '<tr><td>' + CLS[c].name + '</td><td>' + fmt(km) + '</td><td>' + (1000 * km / areaKm2).toFixed(1) + '</td></tr>'; });
+      h += '</table>';
+    }
+    if (overlay) { map.removeLayer(overlay); overlay = null; }
+    if ($('rsurf').checked) {
+      if (!on.length) { h += '<div class="note" style="border:0;margin:0;padding:0">Tick at least one road class.</div>'; }
+      else {
+        const D = distanceGrid(), cv = document.createElement('canvas');
+        cv.width = G.nx; cv.height = G.ny;
+        const ctx = cv.getContext('2d'), img = ctx.createImageData(G.nx, G.ny);
+        const share = [0, 0, 0]; let tot = 0;
+        for (let j = 0; j < G.ny; j++) {
+          const lat = G.lat0 + (j + .5) * G.step, w = G.step * kx(lat) * G.step * KY;
+          for (let i = 0; i < G.nx; i++) {
+            const p = j * G.nx + i; if (!mask[p]) continue;
+            const d = D[p], c = bandRGB(d), o = ((G.ny - 1 - j) * G.nx + i) * 4;
+            img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+            tot += w; if (d <= 15) share[0] += w; if (d <= 30) share[1] += w; if (d <= 60) share[2] += w;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+        overlay = L.imageOverlay(cv.toDataURL(), [[G.lat0, G.lon0], [G.lat0 + G.ny * G.step, G.lon0 + G.nx * G.step]],
+          { opacity: 0.5, pane: 'rsurf', className: 'pix', interactive: false }).addTo(map);
+        h += '<table class="rt"><tr><th>M2 area within…</th><th>15 km</th><th>30 km</th><th>60 km</th></tr><tr><td>' +
+          on.map(c => CLS[c].name).join(' + ') + '</td>' + share.map(s => '<td>' + (100 * s / tot).toFixed(0) + '%</td>').join('') + '</tr></table>';
+      }
+    }
+    $('rstat').innerHTML = h;
+  }
+
+  async function toggle(c, cb) {
+    const status = $('rstatus');
+    if (cb.checked) {
+      if (!data[c]) {
+        status.textContent = 'Loading ' + CLS[c].name + ' from OpenStreetMap…';
+        cb.disabled = true;
+        try { data[c] = await fetchClass(c); }
+        catch (e) { status.textContent = 'Overpass request failed (' + e.message + '). Try again in a moment.'; cb.checked = false; cb.disabled = false; return; }
+        cb.disabled = false;
+        status.textContent = data[c].length ? '' : 'No ' + CLS[c].name + ' found with the current tags.';
+        layers[c] = L.polyline(data[c].map(w => w.g), { pane: 'roads', color: CLS[c].color, weight: CLS[c].weight, opacity: .9, interactive: false });
+      }
+      if (cb.checked) { layers[c].addTo(map); shown.add(c); }
+    } else {
+      if (layers[c]) map.removeLayer(layers[c]);
+      shown.delete(c);
+    }
+    update();
+  }
+
+  document.querySelectorAll('#roads input[data-cls]').forEach(cb => cb.addEventListener('change', () => toggle(cb.dataset.cls, cb)));
+  $('rsurf').addEventListener('change', update);
+
+  // accordion: open = layers on, close = layers off (ticks and downloaded data are kept)
+  const rbox = $('roads');
+  rbox.addEventListener('toggle', () => {
+    shown.forEach(c => rbox.open ? layers[c].addTo(map) : map.removeLayer(layers[c]));
+    if (overlay) { rbox.open ? overlay.addTo(map) : map.removeLayer(overlay); }
+  });
+})();
+</script>
+
+<!-- ===================== ATTRACTION CENTERS: Huff model ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap, H = window.HUFF;
+  const $ = id => document.getElementById(id);
+  if (!map) return;
+  if (!H) { $('hinfo').innerHTML = '<span style="color:#b45309">Data missing: window.HUFF (assets/m2/huff.js).</span>'; return; }
+
+  const PTS = H.pts, CENTERS = H.centers, byId = {};
+  CENTERS.forEach(c => byId[c.id] = c);
+  const YLORRD = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026'];   // ColorBrewer YlOrRd
+  const probs = PTS.map(p => p[5]).sort((a, b) => a - b);
+  const BR = []; for (let i = 1; i < 7; i++) BR.push(probs[Math.floor(i * probs.length / 7)]);
+  const pc = v => (v * 100).toFixed(1) + '%';
+  const colorFor = v => { let i = 0; while (i < BR.length && v >= BR[i]) i++; return YLORRD[i]; };
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+
+  map.createPane('huff'); map.getPane('huff').style.zIndex = 440;
+  const area = L.layerGroup(), lines = L.layerGroup(), pts = L.layerGroup(), cen = L.layerGroup();
+  const layer = L.layerGroup([area, lines, pts, cen]);       // not added: appears when the section is opened
+
+  $('hsel').innerHTML = '<option value="all">All centres (main centre of every locality)</option>' +
+    CENTERS.map(c => '<option value="' + c.id + '">' + c.name + ' (' + c.n + ')</option>').join('') +
+    '<option value="other">Other local centres</option>';
+
+  $('hleg').innerHTML = '<div class="hd">PROB_MAX (probability of main centre)</div>' + YLORRD.map((c, i) =>
+    '<div class="it"><span class="sw" style="background:' + c + '"></span>' +
+    pc(i === 0 ? probs[0] : BR[i - 1]) + ' – ' + pc(i === 6 ? probs[probs.length - 1] : BR[i]) + '</div>').join('');
+
+  function hull(p) {                                           // Andrew monotone chain
+    p = p.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (p.length < 3) return p;
+    const x = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    for (const q of p) { while (lo.length >= 2 && x(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length >= 2 && x(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+    lo.pop(); up.pop(); return lo.concat(up);
+  }
+
+  function draw(fit) {
+    [area, lines, pts, cen].forEach(g => g.clearLayers());
+    const v = $('hsel').value, info = $('hinfo');
+    const rows = v === 'all' ? PTS : v === 'other' ? PTS.filter(p => !byId[p[4]]) : PTS.filter(p => p[4] === +v);
+    const single = v !== 'all' && v !== 'other', c = single ? byId[+v] : null;
+
+    rows.forEach(p => {
+      const ctr = byId[p[4]];
+      L.circleMarker([p[3], p[2]], { pane: 'huff', radius: single ? 6 : 4.5, color: '#333', weight: .6, fillColor: colorFor(p[5]), fillOpacity: .85 })
+        .bindTooltip('<b>' + p[1] + '</b><br>SIRUTA ' + p[0] + '<br>Main centre: ' + (ctr ? ctr.name : 'local centre (ID ' + p[4] + ')') + '<br>PROB_MAX: ' + pc(p[5]))
+        .addTo(pts);
+    });
+
+    if (single) {
+      if ($('harea').checked && rows.length >= 3)
+        L.polygon(hull(rows.map(p => [p[2], p[3]]).concat([[c.lon, c.lat]])).map(q => [q[1], q[0]]),
+          { pane: 'huff', color: '#b10026', weight: 1.5, dashArray: '5 4', fillColor: '#fd8d3c', fillOpacity: .12, interactive: false }).addTo(area);
+      if ($('hlines').checked)
+        rows.forEach(p => L.polyline([[p[3], p[2]], [c.lat, c.lon]], { pane: 'huff', color: '#555', weight: .7, opacity: .5, interactive: false }).addTo(lines));
+      L.circleMarker([c.lat, c.lon], { pane: 'huff', radius: 9, color: '#0b2545', weight: 2.5, fillColor: '#fff', fillOpacity: 1 })
+        .bindTooltip(c.name, { permanent: true, direction: 'right', offset: [10, 0], className: 'hlabel' }).addTo(cen);
+      const pm = rows.map(p => p[5]);
+      info.innerHTML = '<b>' + c.name + '</b><br>Mass (TOP_D_MASS): ' + fmt(c.mass) + '<br>Localities drawn: ' + rows.length +
+        '<br>PROB_MAX: mean ' + pc(pm.reduce((a, b) => a + b, 0) / pm.length) + ', max ' + pc(Math.max(...pm));
+      if (fit) map.fitBounds(L.latLngBounds(rows.map(p => [p[3], p[2]])).extend([c.lat, c.lon]), { padding: [30, 30] });
+    } else if (v === 'other') {
+      info.innerHTML = 'Other local centres: <b>' + rows.length + '</b> localities';
+    } else {
+      CENTERS.forEach(k => L.circleMarker([k.lat, k.lon], { pane: 'huff', radius: 6, color: '#0b2545', weight: 2, fillColor: '#fff', fillOpacity: 1 })
+        .bindTooltip(k.name + ' (' + k.n + ' localities)').on('click', () => { $('hsel').value = k.id; draw(true); }).addTo(cen));
+      info.innerHTML = '<b>' + PTS.length + '</b> localities · <b>' + CENTERS.length + '</b> main centres + local centres';
+    }
+  }
+
+  $('hsel').addEventListener('change', () => draw(true));
+  $('harea').addEventListener('change', () => draw(false));
+  $('hlines').addEventListener('change', () => draw(false));
+
+  // accordion: open = layer on, close = layer off
+  const box = $('huff');
+  box.addEventListener('toggle', function () {
+    if (this.open) { layer.addTo(map); draw(false); }
+    else map.removeLayer(layer);
+  });
+})();
+</script>
+
+<!-- ===================== ATTRACTION CENTERS: Reilly model ===================== -->
+<script>
+(function () {
+  const map = window.leafletMap, R = window.REILLY, H = window.HUFF;
+  const $ = id => document.getElementById(id);
+  if (!map) return;
+  if (!R) { $('rlinfo').innerHTML = '<span style="color:#b45309">Data missing: window.REILLY (assets/m2/reilly.js).</span>'; return; }
+
+  const byId = {}; ((H && H.centers) || []).forEach(c => byId[c.id] = c);
+  const nameOf = id => byId[id] ? byId[id].name : 'Local centre (ID ' + id + ')';
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const FEATS = R.features.slice().sort((a, b) => b.properties.n - a.properties.n);   // big areas first, small ones stay hoverable on top
+  const TOTAL = FEATS.reduce((s, f) => s + f.properties.n, 0);
+
+  // fixed classes on N_ORIGINS (the distribution is very skewed: 149 of 238 areas have a single locality)
+  const CLS = [[1, 1], [2, 2], [3, 4], [5, 9], [10, 19], [20, 39], [40, 1e9]];
+  const BLUES = ['#eff3ff', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594'];
+  const cls = n => CLS.findIndex(c => n >= c[0] && n <= c[1]);
+  const clsLabel = c => c[1] === c[0] ? '' + c[0] : c[1] >= 1e9 ? c[0] + '+' : c[0] + ' – ' + c[1];
+
+  // area (km²) by projecting to a local plane; holes are subtracted
+  function ringKm2(r) {
+    let a = 0;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const k = 111.32 * Math.cos((r[i][1] + r[j][1]) / 2 * Math.PI / 180), ky = 110.57;
+      a += (r[j][0] * k) * (r[i][1] * ky) - (r[i][0] * k) * (r[j][1] * ky);
+    }
+    return Math.abs(a) / 2;
+  }
+  function geomKm2(g) {
+    const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+    return polys.reduce((s, p) => s + p.reduce((t, r, i) => t + (i ? -1 : 1) * ringKm2(r), 0), 0);
+  }
+
+  map.createPane('reilly').style.zIndex = 415;      // below roads (420) and the M2 outline (430)
+
+  const group = L.layerGroup(), marks = L.layerGroup();
+  const layer = L.layerGroup([group, marks]);         // not added: appears when the section is opened
+  const polys = {};
+
+  const mainFeats = FEATS.filter(f => byId[f.properties.id]);
+  $('rlsel').innerHTML = '<option value="all">All centres (' + FEATS.length + ' areas)</option>' +
+    '<optgroup label="Main centres (named)">' + mainFeats.map(f => '<option value="' + f.properties.id + '">' + nameOf(f.properties.id) + ' (' + f.properties.n + ')</option>').join('') + '</optgroup>' +
+    '<optgroup label="Local centres">' + FEATS.filter(f => !byId[f.properties.id]).map(f => '<option value="' + f.properties.id + '">ID ' + f.properties.id + ' (' + f.properties.n + ')</option>').join('') + '</optgroup>';
+
+  function styleFor(f, v) {
+    const p = f.properties, fill = BLUES[cls(p.n)];
+    if (v === 'all') return { pane: 'reilly', fillColor: fill, fillOpacity: .5, color: '#0b2545', weight: .6, opacity: .6 };
+    return +v === p.id
+      ? { pane: 'reilly', fillColor: fill, fillOpacity: .6, color: '#0b2545', weight: 2, opacity: 1 }
+      : { pane: 'reilly', fillColor: '#cbd5e1', fillOpacity: .08, color: '#94a3b8', weight: .4, opacity: .5 };
+  }
+
+  FEATS.forEach(f => {
+    const p = f.properties, km2 = geomKm2(f.geometry);
+    const l = L.geoJSON(f, { style: () => ({}) });
+    l.eachLayer(ly => {
+      ly.bindTooltip('<b>' + nameOf(p.id) + '</b><br>ID ' + p.id + '<br>Localities allocated: ' + p.n + '<br>Area: ' + fmt(km2) + ' km²', { sticky: true });
+      ly.on('mouseover', () => { ly.setStyle({ weight: 2.5, color: '#0b2545', opacity: 1 }); ly.bringToFront(); });
+      ly.on('mouseout', () => ly.setStyle(styleFor(f, $('rlsel').value)));
+      ly.on('click', () => { $('rlsel').value = $('rlsel').value == p.id ? 'all' : p.id; draw(true); });
+    });
+    polys[p.id] = { f, l, km2 };
+    l.addTo(group);
   });
 
-  if (v!=='all' && v!=='other'){
-    const c = centerById[+v];
-    if (showArea && rows.length>=3){
-      const h = hull(rows.map(p=>[p[2],p[3]]).concat([[c.lon,c.lat]])).map(q=>[q[1],q[0]]);
-      L.polygon(h,{color:'#b10026',weight:1.5,dashArray:'5 4',fillColor:'#fd8d3c',fillOpacity:.12}).addTo(areaLayer);
+  $('rlleg').innerHTML = '<div class="hd">N_ORIGINS (localities allocated)</div>' + CLS.map((c, i) =>
+    '<div class="it"><span class="sw" style="background:' + BLUES[i] + '"></span>' + clsLabel(c) +
+    '<span class="n" style="margin-left:auto;color:var(--muted)">' + FEATS.filter(f => cls(f.properties.n) === i).length + ' areas</span></div>').join('');
+
+  function draw(fit) {
+    const v = $('rlsel').value, info = $('rlinfo');
+    FEATS.forEach(f => polys[f.properties.id].l.eachLayer(ly => ly.setStyle(styleFor(f, v))));
+    marks.clearLayers();
+    if (v === 'all') {
+      if ($('rlmarks').checked)
+        mainFeats.forEach(f => { const c = byId[f.properties.id];
+          L.circleMarker([c.lat, c.lon], { pane: 'reilly', radius: 5, color: '#0b2545', weight: 1.8, fillColor: '#fff', fillOpacity: 1 })
+            .bindTooltip(c.name + ' (' + f.properties.n + ' localities)').on('click', () => { $('rlsel').value = c.id; draw(true); }).addTo(marks); });
+      info.innerHTML = '<b>' + FEATS.length + '</b> areas · <b>' + TOTAL + '</b> localities · <b>' + mainFeats.length + '</b> named main centres';
+    } else {
+      const o = polys[+v], p = o.f.properties, c = byId[p.id];
+      if (c) L.circleMarker([c.lat, c.lon], { pane: 'reilly', radius: 9, color: '#0b2545', weight: 2.5, fillColor: '#fff', fillOpacity: 1 })
+        .bindTooltip(c.name, { permanent: true, direction: 'right', offset: [10, 0], className: 'rllabel' }).addTo(marks);
+      info.innerHTML = '<b>' + nameOf(p.id) + '</b><br>Localities allocated: ' + p.n + ' (' + (100 * p.n / TOTAL).toFixed(1) + '% of all)<br>Area of influence: ' + fmt(o.km2) + ' km²';
+      if (fit) map.fitBounds(o.l.getBounds(), { padding: [30, 30] });
     }
-    if (showLines) rows.forEach(p=>L.polyline([[p[3],p[2]],[c.lat,c.lon]],{color:'#555',weight:.7,opacity:.5}).addTo(lineLayer));
-    L.circleMarker([c.lat,c.lon],{radius:9,color:'#000',weight:2,fillColor:'#fff',fillOpacity:1})
-      .bindTooltip(c.name,{permanent:true,direction:'top',offset:[0,-8]}).addTo(centerLayer);
-    const pm = rows.map(p=>p[5]);
-    info.innerHTML = `<b>${c.name}</b><br>Masă (TOP_D_MASS): ${c.mass.toLocaleString('ro-RO')}<br>`+
-      `Localități atrase: ${rows.length}<br>PROB_MAX: medie ${fmt(pm.reduce((a,b)=>a+b,0)/pm.length)}, max ${fmt(Math.max(...pm))}`;
-    const b = L.latLngBounds(rows.map(p=>[p[3],p[2]])).extend([c.lat,c.lon]);
-    map.fitBounds(b.pad(.15));
-  } else if (v==='other'){
-    info.innerHTML = `Alte centre locale: ${rows.length} localități`;
-    map.fitBounds(L.latLngBounds(PTS.map(p=>[p[3],p[2]])).pad(.05));
-  } else {
-    CENTERS.forEach(c=>L.circleMarker([c.lat,c.lon],{radius:5,color:'#000',weight:1.5,fillColor:'#fff',fillOpacity:1})
-      .bindTooltip(c.name).addTo(centerLayer));
-    info.innerHTML = `${PTS.length} localități · ${CENTERS.length} centre principale (+ centre locale)`;
-    map.fitBounds(L.latLngBounds(PTS.map(p=>[p[3],p[2]])).pad(.05));
   }
-}
-sel.addEventListener('change',draw);
-document.getElementById('chkArea').addEventListener('change',draw);
-document.getElementById('chkLines').addEventListener('change',draw);
-draw();
+
+  $('rlsel').addEventListener('change', () => draw(true));
+  $('rlmarks').addEventListener('change', () => draw(false));
+
+  // accordion: open = layer on, close = layer off
+  $('reilly').addEventListener('toggle', function () {
+    if (this.open) { layer.addTo(map); draw(false); }
+    else map.removeLayer(layer);
+  });
+})();
 </script>
 </body>
 </html>
