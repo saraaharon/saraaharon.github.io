@@ -103,6 +103,18 @@
             background:linear-gradient(to top, rgba(11,15,26,.92), rgba(11,15,26,0) 60%);
             opacity:0;
             transition:opacity .25s ease;
+            pointer-events:none;
+        }
+
+        .mc-badge,
+        .mc-play,
+        .mc-overlay{
+            z-index:2;
+        }
+
+        .mc-tile video{
+            position:relative;
+            z-index:1;
         }
 
         .mc-tile:hover .mc-overlay,
@@ -278,7 +290,8 @@
                     data-video="assets/images/30days/day3_airports.mp4"
                     data-caption="<b>Day 3 · Polygons</b><br>How far is the nearest airport? Driving-time zones across Romania, animated from 0 to 180 minutes.">
                 <video src="assets/images/30days/day3_airports.mp4"
-                     alt="Day 3, Polygons: driving time to the nearest airport in Romania" loading="lazy">
+                       autoplay muted loop playsinline preload="metadata"
+                       aria-label="Day 3, Polygons: driving time to the nearest airport in Romania"></video>
                 <span class="mc-badge">Day 3</span>
                 <span class="mc-play">▶</span>
                 <span class="mc-overlay">
@@ -304,7 +317,8 @@
                     data-video="assets/images/30days/day5_sight_moldoveanu.mp4"
                     data-caption="<b>Day 5 · Sight</b><br>How much of Romania can you see from Moldoveanu? A 360° viewshed from the summit, with the panorama you would see in each direction.">
                 <video src="assets/images/30days/day5_sight_moldoveanu.mp4"
-                     alt="Day 5, Sight: viewshed from Moldoveanu Peak" loading="lazy">
+                       autoplay muted loop playsinline preload="metadata"
+                       aria-label="Day 5, Sight: viewshed from Moldoveanu Peak"></video>
                 <span class="mc-badge">Day 5</span>
                 <span class="mc-play">▶</span>
                 <span class="mc-overlay">
