@@ -44,18 +44,21 @@
             font:inherit;
         }
 
-        .mc-tile img{
-            width:100%;
-            height:100%;
-            object-fit:contain;                     /* show the whole map, no cropping */
-            display:block;
-            transition:transform .35s ease;
-        }
+        .mc-tile img,
+.mc-tile video{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+    transition:transform .35s ease;
+}
 
-        .mc-tile:hover img,
-        .mc-tile:focus-visible img{
-            transform:scale(1.04);
-        }
+.mc-tile:hover img,
+.mc-tile:hover video,
+.mc-tile:focus-visible img,
+.mc-tile:focus-visible video{
+    transform:scale(1.04);
+}
 
         /* "Day 1" pill, always visible */
         .mc-badge{
@@ -227,15 +230,6 @@
 
 </nav>
 
-
-
-<!-- ===================================== -->
-<!-- HERO -->
-<!-- ===================================== -->
-
-
-
-
 <!-- ===================================== -->
 <!-- MAP GRID -->
 <!-- ===================================== -->
@@ -283,7 +277,7 @@
             <button class="mc-tile" type="button"
                     data-video="assets/images/30days/day3_airports.mp4"
                     data-caption="<b>Day 3 · Polygons</b><br>How far is the nearest airport? Driving-time zones across Romania, animated from 0 to 180 minutes.">
-                <img src="assets/images/30days/day3_airports.mp4"
+                <video src="assets/images/30days/day3_airports.mp4"
                      alt="Day 3, Polygons: driving time to the nearest airport in Romania" loading="lazy">
                 <span class="mc-badge">Day 3</span>
                 <span class="mc-play">▶</span>
@@ -309,7 +303,7 @@
             <button class="mc-tile" type="button"
                     data-video="assets/images/30days/day5_sight_moldoveanu.mp4"
                     data-caption="<b>Day 5 · Sight</b><br>How much of Romania can you see from Moldoveanu? A 360° viewshed from the summit, with the panorama you would see in each direction.">
-                <img src="assets/images/30days/day5_sight_moldoveanu.mp4"
+                <video src="assets/images/30days/day5_sight_moldoveanu.mp4"
                      alt="Day 5, Sight: viewshed from Moldoveanu Peak" loading="lazy">
                 <span class="mc-badge">Day 5</span>
                 <span class="mc-play">▶</span>
@@ -386,6 +380,10 @@
         var stage = document.getElementById('mcStage');
         var caption = document.getElementById('mcCaption');
         var current = 0;
+        document.querySelectorAll('.mc-tile video').forEach(function (v) {
+    v.muted = true;
+    v.play().catch(function () {});
+});
 
         function show(i) {
 
