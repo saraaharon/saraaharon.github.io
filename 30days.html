@@ -214,6 +214,40 @@
 
         }
 
+        /* ===== Mobile nav fix: stack logo above the links ===== */
+
+html, body{
+    overflow-x:hidden;          /* safety net: page never scrolls sideways */
+}
+
+@media (max-width:700px){
+
+    nav{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+        padding:16px 20px;
+    }
+
+    nav .logo{
+        font-size:18px;
+        white-space:normal;
+    }
+
+    nav ul{
+        display:flex;
+        flex-wrap:wrap;
+        gap:6px 18px;
+        margin:0;
+        padding:0;
+    }
+
+    nav ul li a{
+        font-size:15px;
+    }
+
+}
+
     </style>
 
 </head>
@@ -303,7 +337,9 @@
             <!-- Day 4 -->
             <button class="mc-tile" type="button"
                     data-caption="<b>Day 4 · Clusters</b><br>Where Romania clusters: towns and villages grouped with DBSCAN (settlements within 5 km of each other).">
-                <img src="assets/images/30days/day4_clusters.png"
+                <video src="assets/images/30days/day4_clusters.mp4"
+                       autoplay muted loop playsinline preload="metadata"
+                       aria-label="Day 4, Clusters: DBSCAN clusters of Romanian settlements"></video>
                      alt="Day 4, Clusters: DBSCAN clusters of Romanian settlements" loading="lazy">
                 <span class="mc-badge">Day 4</span>
                 <span class="mc-overlay">
