@@ -362,77 +362,62 @@ nav a:hover{
 
 /* FOOTER */
 
+/* FOOTER (slim, all pages) */
+
+body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
 footer{
-
     width:100%;
-
-    margin-top:120px;
-
-    padding:70px 20px;
-
+    margin-top:auto;      /* sticks to the bottom on short pages */
+    padding:14px 0;
     background:#0f172a;
-
     color:white;
-
-    text-align:center;
-
 }
 
-
-footer h3{
-
-    font-size:2rem;
-
-    margin-bottom:10px;
-
+footer .container{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px 24px;
+    flex-wrap:wrap;
 }
-
-
-footer p{
-
-    color:#cbd5e1;
-
-    white-space: nowrap;
-
-    margin:8px 0;
-
-}
-
 
 .footer-links{
-
-    margin:35px 0;
-
+    margin:0;
     display:flex;
-
-    justify-content:center;
-
     align-items:center;
-
-    gap:35px;
-
+    gap:26px;
     flex-wrap:wrap;
-
 }
-
 
 .footer-links a{
-
     color:white;
-
     text-decoration:none;
-
     font-weight:600;
-
+    font-size:.95rem;
     transition:.3s;
-
 }
 
-
 .footer-links a:hover{
-
     color:#3b82f6;
+}
 
+.copyright{
+    margin:0;
+    font-size:.85rem;
+    color:#94a3b8;
+    white-space:nowrap;
+}
+
+@media (max-width:600px){
+    footer .container{
+        justify-content:center;
+        text-align:center;
+    }
 }
 
 
@@ -531,3 +516,67 @@ footer p{
 
 }
 
+/* HOME: one-screen layout (desktop only) */
+@media (min-width: 900px) and (min-height: 560px) {
+
+  body.home {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  body.home nav {
+    flex: 0 0 auto;
+    margin: 0 auto;
+    padding: 16px 0;
+  }
+
+  body.home .hero {
+    flex: 1;
+    min-height: 0;
+  }
+
+  body.home .hero h1 {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    margin-bottom: 24px;
+  }
+
+  body.home .eyebrow {
+    margin-bottom: 14px;
+  }
+
+  body.home .hero-visual {
+    display: flex;
+    justify-content: center;
+  }
+
+  body.home .hero-visual img {
+    width: auto;
+    max-width: 100%;
+    max-height: 58vh;
+  }
+
+  /* slim footer */
+  body.home footer {
+    flex: 0 0 auto;
+    margin-top: 0;
+    padding: 14px 0;
+  }
+
+  body.home footer .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  body.home .footer-links {
+    margin: 0;
+    gap: 26px;
+  }
+
+  body.home .copyright {
+    margin: 0;
+    font-size: .85rem;
+  }
+}
