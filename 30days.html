@@ -74,6 +74,7 @@
             background: #0b0f1a;
             cursor: pointer;
             font: inherit;
+            width: 100%;
         }
 
         .mc-tile img,
@@ -83,64 +84,13 @@
             object-fit: contain;
             display: block;
             transition: transform 0.35s ease;
+            pointer-events: none; /* Prevents video elements from intercepting clicks meant for the tile button */
         }
 
         .mc-tile:hover img,
         .mc-tile:hover video,
         .mc-tile:focus-visible img,
         .mc-tile:focus-visible video { transform: scale(1.04); }
-
-        .mc-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(11, 15, 26, 0.78);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-
-        .mc-play {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(11, 15, 26, 0.78);
-            color: #fff;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mc-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 16px;
-            text-align: left;
-            color: #fff;
-            background: linear-gradient(to top, rgba(11, 15, 26, 0.92), rgba(11, 15, 26, 0) 60%);
-            opacity: 0;
-            transition: opacity 0.25s ease;
-            pointer-events: none;
-        }
-
-        .mc-badge, .mc-play, .mc-overlay { z-index: 2; }
-        .mc-tile video { position: relative; z-index: 1; }
-
-        .mc-tile:hover .mc-overlay,
-        .mc-tile:focus-visible .mc-overlay { opacity: 1; }
-
-        .mc-overlay strong { font-size: 15px; font-weight: 700; line-height: 1.3; }
-        .mc-overlay span { margin-top: 4px; font-size: 12px; color: #c7cde0; }
 
         /* Lightbox */
         .mc-lightbox {
@@ -219,16 +169,13 @@
         .footer-links a:hover { color: #fff; }
         .copyright { font-size: 0.8rem; color: rgba(255, 255, 255, 0.4); }
 
-        /* Mobile: still 3 per row */
+        /* Mobile */
         @media (max-width: 700px) {
             nav { padding: 20px; }
             nav ul { gap: 18px; }
             .container { padding: 0 12px; }
             .mc-grid { gap: 3px; }
             .mc-tile { border-radius: 3px; }
-            .mc-overlay { display: none; }
-            .mc-badge { top: 5px; left: 5px; padding: 2px 7px; font-size: 10px; }
-            .mc-play { top: 5px; right: 5px; width: 20px; height: 20px; font-size: 8px; }
             .mc-prev, .mc-next { display: none; }
         }
     </style>
@@ -251,20 +198,11 @@
 
         <div class="mc-grid" id="mcGrid">
 
-            <!-- TO ADD A NEW DAY: copy one block, paste it at the end of the grid,
-                 then change day / title / theme / file names.
-                 Videos: use <video> instead of <img> and add data-video="..." -->
-
             <!-- Day 1 -->
             <button class="mc-tile" type="button"
                     data-caption="<b>Day 1 · Points</b><br>Emergency hospitals of Romania, from OpenStreetMap, with a Bucharest inset.">
                 <img src="assets/images/30days/day1_points_hospitals.png"
                      alt="Day 1, Points: map of emergency hospitals in Romania" loading="lazy">
-                <span class="mc-badge">Day 1</span>
-                <span class="mc-overlay">
-                    <strong>Emergency Hospitals of Romania</strong>
-                    <span>Points</span>
-                </span>
             </button>
 
             <!-- Day 2 -->
@@ -272,11 +210,6 @@
                     data-caption="<b>Day 2 · Lines</b><br>Romania’s motorways: open, under construction and planned, from OpenStreetMap.">
                 <img src="assets/images/30days/day2_motorways.png"
                      alt="Day 2, Lines: map of Romania’s motorways" loading="lazy">
-                <span class="mc-badge">Day 2</span>
-                <span class="mc-overlay">
-                    <strong>Romania’s Motorways</strong>
-                    <span>Lines</span>
-                </span>
             </button>
 
             <!-- Day 3 (video) -->
@@ -286,12 +219,6 @@
                 <video src="assets/images/30days/day3_airports.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 3, Polygons: driving time to the nearest airport in Romania"></video>
-                <span class="mc-badge">Day 3</span>
-                <span class="mc-play">▶</span>
-                <span class="mc-overlay">
-                    <strong>How Far Is the Nearest Airport?</strong>
-                    <span>Polygons</span>
-                </span>
             </button>
 
             <!-- Day 4 (video) -->
@@ -301,12 +228,6 @@
                 <video src="assets/images/30days/day4_clusters.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 4, Clusters: Romania’s brightest night-light clusters as a star chart"></video>
-                <span class="mc-badge">Day 4</span>
-                <span class="mc-play">▶</span>
-                <span class="mc-overlay">
-                    <strong>Where Romania Clusters</strong>
-                    <span>Clusters</span>
-                </span>
             </button>
 
             <!-- Day 5 (video) -->
@@ -316,12 +237,6 @@
                 <video src="assets/images/30days/day5_sight_moldoveanu.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 5, Sight: viewshed from Moldoveanu Peak"></video>
-                <span class="mc-badge">Day 5</span>
-                <span class="mc-play">▶</span>
-                <span class="mc-overlay">
-                    <strong>How Much of Romania Can You See from Moldoveanu?</strong>
-                    <span>Sight · 360° video</span>
-                </span>
             </button>
 
             <!-- Day 6 -->
@@ -329,11 +244,6 @@
                     data-caption="<b>Day 6 · Vintage</b><br>Marea Neagră. A 1930s-style tourism poster of the Romanian coast, with the sun rising over the Black Sea, waves following the real coastline and the resorts from Sulina to Vama Veche.">
                 <img src="assets/images/30days/day6_vintage_poster.png"
                      alt="Day 6, Vintage: retro tourism poster of the Romanian Black Sea coast" loading="lazy">
-                <span class="mc-badge">Day 6</span>
-                <span class="mc-overlay">
-                    <strong>Marea Neagră: A Black Sea Tourism Poster</strong>
-                    <span>Vintage · 1930s poster</span>
-                </span>
             </button>
 
             <!-- Day 7 (video) -->
@@ -343,12 +253,6 @@
                 <video src="assets/images/30days/day7_volcanoes.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 7, 10 Minute Map: Volcanoes of Fire chronological eruption animation"></video>
-                <span class="mc-badge">Day 7</span>
-                <span class="mc-play">▶</span>
-                <span class="mc-overlay">
-                    <strong>Volcanoes of Fire: Violent Eruptions</strong>
-                    <span>10 Minute Map · Chronological Animation</span>
-                </span>
             </button>
 
             <!-- Day 8 (video) -->
@@ -358,12 +262,6 @@
                 <video src="assets/images/30days/day8_rewilded.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 8, Utopia: Pangea Ultima re-wilded continent wildlife corridor animation"></video>
-                <span class="mc-badge">Day 8</span>
-                <span class="mc-play">▶</span>
-                <span class="mc-overlay">
-                    <strong>Pangea Ultima: Re-Wilded Continent</strong>
-                    <span>Utopia · Ecological Network Animation</span>
-                </span>
             </button>
 
             <!-- Day 24 (video) -->
@@ -373,12 +271,6 @@
                 <video src="assets/images/30days/day24_network_beijing.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 24, Network: Beijing pedestrian movement network animation"></video>
-                <span class="mc-badge">Day 24</span>
-                <span class="mc-play">▶</span>
-                <span class="mc-overlay">
-                    <strong>Beijing Pedestrian Movement Network</strong>
-                    <span>Network · 24-hour animation</span>
-                </span>
             </button>
 
         </div>
@@ -406,7 +298,6 @@
 </footer>
 
 <script>
-    // Lightbox
     (function () {
         var tiles = Array.prototype.slice.call(document.querySelectorAll('.mc-tile'));
         var box = document.getElementById('mcLightbox');
@@ -435,8 +326,10 @@
                 stage.appendChild(v);
             } else {
                 var img = document.createElement('img');
-                img.src = t.dataset.full || t.querySelector('img').getAttribute('src');
-                img.alt = t.querySelector('img').alt;
+                var imgSource = t.dataset.full || (t.querySelector('img') ? t.querySelector('img').getAttribute('src') : '');
+                var imgAlt = t.querySelector('img') ? t.querySelector('img').alt : '';
+                img.src = imgSource;
+                img.alt = imgAlt;
                 stage.appendChild(img);
             }
 
@@ -456,8 +349,8 @@
         });
 
         document.getElementById('mcClose').addEventListener('click', close);
-        document.getElementById('mcPrev').addEventListener('click', function () { show(current - 1); });
-        document.getElementById('mcNext').addEventListener('click', function () { show(current + 1); });
+        document.getElementById('mcPrev').addEventListener('click', function (e) { e.stopPropagation(); show(current - 1); });
+        document.getElementById('mcNext').addEventListener('click', function (e) { e.stopPropagation(); show(current + 1); });
 
         box.addEventListener('click', function (e) {
             if (e.target === box) close();
@@ -471,7 +364,7 @@
         });
     })();
 
-    // Stars
+    // Stars Canvas
     (function () {
         var canvas = document.getElementById('stars');
         var ctx = canvas.getContext('2d');
