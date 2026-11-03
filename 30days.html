@@ -1,299 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>#30DayMapChallenge 2026 | Sara Aharon</title>
 
-    <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/research.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ===== #30DayMapChallenge: Instagram-style grid ===== */
+        html, body { overflow-x: hidden; }
 
-        .mc-section{
-            padding:20px 0 90px;
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        .mc-grid{
-            display:grid;
-            grid-template-columns:repeat(3, 1fr);   /* always 3 per row */
-            gap:6px;
+        #stars {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
         }
 
-        .mc-tile{
-            position:relative;
-            display:block;
-            aspect-ratio:1 / 1;                     /* square, like Instagram */
-            padding:0;
-            border:0;
-            border-radius:6px;
-            overflow:hidden;
-            background:#0b0f1a;                     /* same dark as the maps */
-            cursor:pointer;
-            font:inherit;
+        nav, main, footer { position: relative; z-index: 1; }
+
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px 28px;
+            padding: 28px 40px;
+        }
+        nav .logo { font-weight: 600; letter-spacing: 0.04em; }
+        nav ul { display: flex; gap: 28px; list-style: none; }
+        nav a {
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        nav a:hover { color: #fff; }
+
+        main { flex: 1; padding: 20px 0 90px; }
+
+        /* Grid */
+        .mc-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .mc-tile {
+            position: relative;
+            display: block;
+            aspect-ratio: 1 / 1;
+            padding: 0;
+            border: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #0b0f1a;
+            cursor: pointer;
+            font: inherit;
         }
 
         .mc-tile img,
-.mc-tile video{
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    display:block;
-    transition:transform .35s ease;
-}
-
-.mc-tile:hover img,
-.mc-tile:hover video,
-.mc-tile:focus-visible img,
-.mc-tile:focus-visible video{
-    transform:scale(1.04);
-}
-
-        /* "Day 1" pill, always visible */
-        .mc-badge{
-            position:absolute;
-            top:10px;
-            left:10px;
-            padding:4px 10px;
-            border-radius:999px;
-            background:rgba(11,15,26,.78);
-            color:#fff;
-            font-size:12px;
-            font-weight:700;
-            letter-spacing:.3px;
+        .mc-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.35s ease;
         }
 
-        /* play icon on video tiles */
-        .mc-play{
-            position:absolute;
-            top:10px;
-            right:10px;
-            width:28px;
-            height:28px;
-            border-radius:50%;
-            background:rgba(11,15,26,.78);
-            color:#fff;
-            font-size:11px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
+        .mc-tile:hover img,
+        .mc-tile:hover video,
+        .mc-tile:focus-visible img,
+        .mc-tile:focus-visible video { transform: scale(1.04); }
+
+        .mc-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(11, 15, 26, 0.78);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
         }
 
-        /* title on hover */
-        .mc-overlay{
-            position:absolute;
-            inset:0;
-            display:flex;
-            flex-direction:column;
-            justify-content:flex-end;
-            padding:16px;
-            text-align:left;
-            color:#fff;
-            background:linear-gradient(to top, rgba(11,15,26,.92), rgba(11,15,26,0) 60%);
-            opacity:0;
-            transition:opacity .25s ease;
-            pointer-events:none;
+        .mc-play {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(11, 15, 26, 0.78);
+            color: #fff;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .mc-badge,
-        .mc-play,
-        .mc-overlay{
-            z-index:2;
+        .mc-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+            text-align: left;
+            color: #fff;
+            background: linear-gradient(to top, rgba(11, 15, 26, 0.92), rgba(11, 15, 26, 0) 60%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
         }
 
-        .mc-tile video{
-            position:relative;
-            z-index:1;
-        }
+        .mc-badge, .mc-play, .mc-overlay { z-index: 2; }
+        .mc-tile video { position: relative; z-index: 1; }
 
         .mc-tile:hover .mc-overlay,
-        .mc-tile:focus-visible .mc-overlay{
-            opacity:1;
+        .mc-tile:focus-visible .mc-overlay { opacity: 1; }
+
+        .mc-overlay strong { font-size: 15px; font-weight: 700; line-height: 1.3; }
+        .mc-overlay span { margin-top: 4px; font-size: 12px; color: #c7cde0; }
+
+        /* Lightbox */
+        .mc-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(5, 8, 15, 0.94);
         }
+        .mc-lightbox[hidden] { display: none; }
 
-        .mc-overlay strong{
-            font-size:15px;
-            font-weight:700;
-            line-height:1.3;
+        .mc-stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: min(1100px, 100%);
+            max-height: 82vh;
         }
-
-        .mc-overlay span{
-            margin-top:4px;
-            font-size:12px;
-            color:#c7cde0;
-        }
-
-        /* ===== Lightbox ===== */
-
-        .mc-lightbox{
-            position:fixed;
-            inset:0;
-            z-index:1000;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            padding:24px;
-            background:rgba(5,8,15,.94);
-        }
-
-        .mc-lightbox[hidden]{
-            display:none;
-        }
-
-        .mc-stage{
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            max-width:min(1100px, 100%);
-            max-height:82vh;
-        }
-
         .mc-stage img,
-        .mc-stage video{
-            max-width:100%;
-            max-height:82vh;
-            border-radius:10px;
-            background:#0b0f1a;
+        .mc-stage video {
+            max-width: 100%;
+            max-height: 82vh;
+            border-radius: 10px;
+            background: #0b0f1a;
         }
 
-        .mc-caption{
-            margin-top:16px;
-            max-width:760px;
-            text-align:center;
-            color:#c7cde0;
-            font-size:14px;
-            line-height:1.6;
+        .mc-caption {
+            margin-top: 16px;
+            max-width: 760px;
+            text-align: center;
+            color: #c7cde0;
+            font-size: 14px;
+            line-height: 1.6;
         }
+        .mc-caption b { color: #fff; }
 
-        .mc-caption b{
-            color:#fff;
+        .mc-btn {
+            position: absolute;
+            border: 0;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
         }
+        .mc-btn:hover { background: rgba(255, 255, 255, 0.18); }
+        .mc-close { top: 20px; right: 20px; }
+        .mc-prev { left: 20px; top: 50%; transform: translateY(-50%); }
+        .mc-next { right: 20px; top: 50%; transform: translateY(-50%); }
 
-        .mc-btn{
-            position:absolute;
-            border:0;
-            background:rgba(255,255,255,.08);
-            color:#fff;
-            width:44px;
-            height:44px;
-            border-radius:50%;
-            font-size:20px;
-            cursor:pointer;
+        /* Footer */
+        footer {
+            padding: 32px 24px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .mc-btn:hover{
-            background:rgba(255,255,255,.18);
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
         }
-
-        .mc-close{ top:20px; right:20px; }
-        .mc-prev{ left:20px; top:50%; transform:translateY(-50%); }
-        .mc-next{ right:20px; top:50%; transform:translateY(-50%); }
-
-        /* ===== Mobile: still 3 per row, like Instagram ===== */
-
-        @media (max-width:700px){
-
-            .mc-grid{ gap:3px; }
-            .mc-tile{ border-radius:3px; }
-            .mc-overlay{ display:none; }
-            .mc-badge{ top:5px; left:5px; padding:2px 7px; font-size:10px; }
-            .mc-play{ top:5px; right:5px; width:20px; height:20px; font-size:8px; }
-            .mc-prev, .mc-next{ display:none; }
-
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
         }
+        .footer-links a:hover { color: #fff; }
+        .copyright { font-size: 0.8rem; color: rgba(255, 255, 255, 0.4); }
 
-        /* ===== Mobile nav fix: links on top, logo underneath ===== */
-
-html, body{
-    overflow-x:hidden;          /* safety net: page never scrolls sideways */
-}
-
-@media (max-width:700px){
-
-    nav{
-        flex-direction:column-reverse;   /* links first, logo under them */
-        align-items:flex-start;
-        gap:10px;
-        padding:16px 20px;
-    }
-
-    nav .logo{
-        font-size:18px;
-        white-space:normal;
-    }
-
-    nav ul{
-        display:flex;
-        flex-wrap:wrap;
-        gap:6px 18px;
-        margin:0;
-        padding:0;
-    }
-
-    nav ul li a{
-        font-size:15px;
-    }
-
-}
-
+        /* Mobile: still 3 per row */
+        @media (max-width: 700px) {
+            nav { padding: 20px; }
+            nav ul { gap: 18px; }
+            .container { padding: 0 12px; }
+            .mc-grid { gap: 3px; }
+            .mc-tile { border-radius: 3px; }
+            .mc-overlay { display: none; }
+            .mc-badge { top: 5px; left: 5px; padding: 2px 7px; font-size: 10px; }
+            .mc-play { top: 5px; right: 5px; width: 20px; height: 20px; font-size: 8px; }
+            .mc-prev, .mc-next { display: none; }
+        }
     </style>
-
 </head>
 
 <body>
 
-<!-- Navigation -->
+<canvas id="stars" aria-hidden="true"></canvas>
 
 <nav>
-
-    <div class="logo">
-        #30DayMapChallenge 2026
-    </div>
-
+    <div class="logo">#30DayMapChallenge 2026</div>
     <ul>
-
         <li><a href="index.html">Home</a></li>
-
-        <li><a href="research.html">Research</a></li>
-
         <li><a href="projects.html">Projects</a></li>
-
-        <li><a href="about.html">About</a></li>
-
     </ul>
-
 </nav>
 
-<!-- ===================================== -->
-<!-- MAP GRID -->
-<!-- ===================================== -->
-
-<section class="mc-section">
-
+<main>
     <div class="container">
-
-       
 
         <div class="mc-grid" id="mcGrid">
 
-            <!-- ============================================================
-                 TO ADD A NEW DAY: copy one block below, paste it at the end
-                 of the grid, then change day / title / theme / file names.
-                 Images:  data-full is optional (defaults to the thumbnail).
-                 Videos:  add data-video="..." and use a still image as src.
-                 ============================================================ -->
+            <!-- TO ADD A NEW DAY: copy one block, paste it at the end of the grid,
+                 then change day / title / theme / file names.
+                 Videos: use <video> instead of <img> and add data-video="..." -->
 
             <!-- Day 1 -->
             <button class="mc-tile" type="button"
@@ -309,17 +269,17 @@ html, body{
 
             <!-- Day 2 -->
             <button class="mc-tile" type="button"
-                    data-caption="<b>Day 2 · Lines</b><br>Romania's motorways: open, under construction and planned, from OpenStreetMap.">
+                    data-caption="<b>Day 2 · Lines</b><br>Romania’s motorways: open, under construction and planned, from OpenStreetMap.">
                 <img src="assets/images/30days/day2_motorways.png"
-                     alt="Day 2, Lines: map of Romania's motorways" loading="lazy">
+                     alt="Day 2, Lines: map of Romania’s motorways" loading="lazy">
                 <span class="mc-badge">Day 2</span>
                 <span class="mc-overlay">
-                    <strong>Romania's Motorways</strong>
+                    <strong>Romania’s Motorways</strong>
                     <span>Lines</span>
                 </span>
             </button>
 
-            <!-- Day 3 (video: the image is the still, the mp4 plays in the lightbox) -->
+            <!-- Day 3 (video) -->
             <button class="mc-tile" type="button"
                     data-video="assets/images/30days/day3_airports.mp4"
                     data-caption="<b>Day 3 · Polygons</b><br>How far is the nearest airport? Driving-time zones across Romania, animated from 0 to 180 minutes.">
@@ -335,19 +295,19 @@ html, body{
             </button>
 
             <!-- Day 4 (video) -->
-<button class="mc-tile" type="button"
-        data-video="assets/images/30days/day4_clusters.mp4"
-        data-caption="<b>Day 4 · Clusters</b><br>Romanian Light Constellations">
-    <video src="assets/images/30days/day4_clusters.mp4"
-           autoplay muted loop playsinline preload="metadata"
-           aria-label="Day 4, Clusters: Romania's brightest night-light clusters as a star chart."></video>
-    <span class="mc-badge">Day 4</span>
-    <span class="mc-play">▶</span>
-    <span class="mc-overlay">
-        <strong>Where Romania Clusters</strong>
-        <span>Clusters</span>
-    </span>
-</button>
+            <button class="mc-tile" type="button"
+                    data-video="assets/images/30days/day4_clusters.mp4"
+                    data-caption="<b>Day 4 · Clusters</b><br>Romanian Light Constellations">
+                <video src="assets/images/30days/day4_clusters.mp4"
+                       autoplay muted loop playsinline preload="metadata"
+                       aria-label="Day 4, Clusters: Romania’s brightest night-light clusters as a star chart"></video>
+                <span class="mc-badge">Day 4</span>
+                <span class="mc-play">▶</span>
+                <span class="mc-overlay">
+                    <strong>Where Romania Clusters</strong>
+                    <span>Clusters</span>
+                </span>
+            </button>
 
             <!-- Day 5 (video) -->
             <button class="mc-tile" type="button"
@@ -364,14 +324,11 @@ html, body{
                 </span>
             </button>
 
-
-            <!-- Day 6 (image) -->
+            <!-- Day 6 -->
             <button class="mc-tile" type="button"
-                    data-image="assets/images/30days/day6_vintage_poster.png"
                     data-caption="<b>Day 6 · Vintage</b><br>Marea Neagră. A 1930s-style tourism poster of the Romanian coast, with the sun rising over the Black Sea, waves following the real coastline and the resorts from Sulina to Vama Veche.">
                 <img src="assets/images/30days/day6_vintage_poster.png"
-                     alt="Day 6, Vintage: retro tourism poster of the Romanian Black Sea coast"
-                     loading="lazy">
+                     alt="Day 6, Vintage: retro tourism poster of the Romanian Black Sea coast" loading="lazy">
                 <span class="mc-badge">Day 6</span>
                 <span class="mc-overlay">
                     <strong>Marea Neagră: A Black Sea Tourism Poster</strong>
@@ -382,7 +339,7 @@ html, body{
             <!-- Day 7 (video) -->
             <button class="mc-tile" type="button"
                     data-video="assets/images/30days/day7_volcanoes.mp4"
-                    data-caption="<b>Day 7 · 10 Minute Map</b><br>Volcanoes of Fire: A chronological timeline animation of Earth's most catastrophic historical volcanic eruptions, mapped by explosive index (VEI).">
+                    data-caption="<b>Day 7 · 10 Minute Map</b><br>Volcanoes of Fire: A chronological timeline animation of Earth’s most catastrophic historical volcanic eruptions, mapped by explosive index (VEI).">
                 <video src="assets/images/30days/day7_volcanoes.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 7, 10 Minute Map: Volcanoes of Fire chronological eruption animation"></video>
@@ -409,11 +366,10 @@ html, body{
                 </span>
             </button>
 
-
             <!-- Day 24 (video) -->
             <button class="mc-tile" type="button"
                     data-video="assets/images/30days/day24_network_beijing.mp4"
-                    data-caption="<b>Day 24 · Network</b><br>Beijing's human movement network mapped hour by hour. A 24-hour cycle of pedestrian trajectories from the Microsoft GeoLife dataset, pulsing over the city's active transport routes.">
+                    data-caption="<b>Day 24 · Network</b><br>Beijing’s human movement network mapped hour by hour. A 24-hour cycle of pedestrian trajectories from the Microsoft GeoLife dataset, pulsing over the city’s active transport routes.">
                 <video src="assets/images/30days/day24_network_beijing.mp4"
                        autoplay muted loop playsinline preload="metadata"
                        aria-label="Day 24, Network: Beijing pedestrian movement network animation"></video>
@@ -428,75 +384,44 @@ html, body{
         </div>
 
     </div>
-
-</section>
-
-
+</main>
 
 <!-- Lightbox -->
-
 <div class="mc-lightbox" id="mcLightbox" hidden>
-
     <button class="mc-btn mc-close" id="mcClose" aria-label="Close">✕</button>
     <button class="mc-btn mc-prev" id="mcPrev" aria-label="Previous map">‹</button>
     <button class="mc-btn mc-next" id="mcNext" aria-label="Next map">›</button>
-
     <div class="mc-stage" id="mcStage"></div>
-
     <p class="mc-caption" id="mcCaption"></p>
-
 </div>
 
-
-
-<!-- Footer -->
-
 <footer>
-
-    <div class="container">
-
-
-        <div class="footer-links">
-
-            <a href="https://github.com/saraaharon" target="_blank">GitHub</a>
-
-            <a href="https://www.linkedin.com/in/saraaharon/" target="_blank">LinkedIn</a>
-
-            <a href="https://orcid.org/0009-0001-8809-5491" target="_blank">ORCID</a>
-
-            <a href="mailto:sara.aharon@yahoo.com">Email</a>
-
-        </div>
-
-        <p class="copyright">
-            © 2026 Sara Aharon
-        </p>
-
+    <div class="footer-links">
+        <a href="https://github.com/saraaharon" target="_blank">GitHub</a>
+        <a href="https://www.linkedin.com/in/saraaharon/" target="_blank">LinkedIn</a>
+        <a href="https://orcid.org/0009-0001-8809-5491" target="_blank">ORCID</a>
+        <a href="mailto:sara.aharon@yahoo.com">Email</a>
     </div>
-
+    <p class="copyright">© 2026 Sara Aharon</p>
 </footer>
 
-
-
 <script>
-
+    // Lightbox
     (function () {
-
         var tiles = Array.prototype.slice.call(document.querySelectorAll('.mc-tile'));
         var box = document.getElementById('mcLightbox');
         var stage = document.getElementById('mcStage');
         var caption = document.getElementById('mcCaption');
         var current = 0;
+
         document.querySelectorAll('.mc-tile video').forEach(function (v) {
-    v.muted = true;
-    v.play().catch(function () {});
-});
+            v.muted = true;
+            v.play().catch(function () {});
+        });
 
         function show(i) {
-
             current = (i + tiles.length) % tiles.length;
             var t = tiles[current];
-
             stage.innerHTML = '';
 
             if (t.dataset.video) {
@@ -518,11 +443,10 @@ html, body{
             caption.innerHTML = t.dataset.caption || '';
             box.hidden = false;
             document.body.style.overflow = 'hidden';
-
         }
 
         function close() {
-            stage.innerHTML = '';          // also stops any playing video
+            stage.innerHTML = '';
             box.hidden = true;
             document.body.style.overflow = '';
         }
@@ -536,7 +460,7 @@ html, body{
         document.getElementById('mcNext').addEventListener('click', function () { show(current + 1); });
 
         box.addEventListener('click', function (e) {
-            if (e.target === box) close();     // click on the dark background
+            if (e.target === box) close();
         });
 
         document.addEventListener('keydown', function (e) {
@@ -545,11 +469,54 @@ html, body{
             if (e.key === 'ArrowLeft') show(current - 1);
             if (e.key === 'ArrowRight') show(current + 1);
         });
-
     })();
 
+    // Stars
+    (function () {
+        var canvas = document.getElementById('stars');
+        var ctx = canvas.getContext('2d');
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var stars = [];
+        var w, h;
+
+        function init() {
+            var dpr = window.devicePixelRatio || 1;
+            w = window.innerWidth;
+            h = window.innerHeight;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            var count = Math.round((w * h) / 9000);
+            stars = Array.from({ length: count }, function () {
+                return {
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 1.1 + 0.3,
+                    speed: Math.random() * 1.5 + 0.5,
+                    phase: Math.random() * Math.PI * 2
+                };
+            });
+        }
+
+        function draw(t) {
+            ctx.clearRect(0, 0, w, h);
+            for (var i = 0; i < stars.length; i++) {
+                var s = stars[i];
+                ctx.globalAlpha = reduceMotion ? 0.7 : 0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * 0.001 * s.speed + s.phase));
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (!reduceMotion) requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', function () { init(); if (reduceMotion) draw(0); });
+        init();
+        requestAnimationFrame(draw);
+    })();
 </script>
 
 </body>
-
 </html>
