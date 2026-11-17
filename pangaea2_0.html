@@ -68,15 +68,35 @@
             background: rgba(94, 240, 224, 0.35);
             border-radius: 9999px;
         }
+        /* Custom scrollbar for catch log & teleport list */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 11, 28, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(94, 240, 224, 0.35);
+            border-radius: 9999px;
+        }
+
         /* Mobile Layout & Touch Overlap Fixes */
         @media (max-width: 768px) {
-            /* Prevent top UI elements from crashing into each other on small screens */
             body {
                 -webkit-text-size-adjust: 100%;
             }
-            /* Make top HUD padding more compact on mobile */
             .glass-panel {
                 padding: 0.5rem !important;
+            }
+            
+            /* Stack absolute Tailwind panels cleanly on mobile */
+            div.absolute.top-4 {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+                top: 10px !important;
+                left: 10px !important;
+                right: 10px !important;
             }
         }
     </style>
@@ -198,7 +218,7 @@
         </div>
 
         <div class="text-[10px] mono text-[#4a5578] hidden lg:block">
-            Starry Cyber-Cloud Edition • Interactive 3D Sandbox
+            Starry Cyber-Cloud Edition • Interactive 3D Sandbox • Sara AHARON
         </div>
     </div>
 
