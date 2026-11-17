@@ -80,23 +80,30 @@
             border-radius: 9999px;
         }
 
-        /* Mobile Layout & Touch Overlap Fixes */
+        /* Robust Mobile UI & Button Fixes */
         @media (max-width: 768px) {
-            body {
-                -webkit-text-size-adjust: 100%;
-            }
-            .glass-panel {
-                padding: 0.5rem !important;
+            /* Force top absolute panels to wrap and stack instead of overlapping */
+            .absolute.top-4 {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                top: 8px !important;
+                left: 8px !important;
+                right: 8px !important;
+                width: auto !important;
             }
             
-            /* Stack absolute Tailwind panels cleanly on mobile */
-            div.absolute.top-4 {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 6px !important;
-                top: 10px !important;
-                left: 10px !important;
-                right: 10px !important;
+            /* Compact glass panels for small screens */
+            .glass-panel {
+                padding: 6px 10px !important;
+                font-size: 11px !important;
+            }
+
+            /* Normalize virtual directional/action buttons at the bottom */
+            button, .glass-panel button {
+                font-family: 'JetBrains Mono', monospace !important;
+                background-color: rgba(7, 11, 28, 0.9) !important;
+                border: 1px solid rgba(94, 240, 224, 0.4) !important;
+                color: #5ef0e0 !important;
             }
         }
     </style>
