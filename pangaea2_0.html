@@ -134,10 +134,14 @@
                 box-sizing: border-box !important;
             }
 
-            /* Slightly trim the inner SFX button padding so it sits flush inside the 40px pill */
-            .absolute.top-4.right-4 button {
-                padding: 4px 8px !important;
+            /* Keep the speaker icon button compact inside the 40px height */
+            div[class*="top-"] button {
+                padding: 3px 7px !important;
+                height: 26px !important;
                 min-height: unset !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
         }
 
