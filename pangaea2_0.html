@@ -68,6 +68,17 @@
             background: rgba(94, 240, 224, 0.35);
             border-radius: 9999px;
         }
+        /* Mobile Layout & Touch Overlap Fixes */
+        @media (max-width: 768px) {
+            /* Prevent top UI elements from crashing into each other on small screens */
+            body {
+                -webkit-text-size-adjust: 100%;
+            }
+            /* Make top HUD padding more compact on mobile */
+            .glass-panel {
+                padding: 0.5rem !important;
+            }
+        }
     </style>
 </head>
 <body class="text-[#f4f1e6]">
