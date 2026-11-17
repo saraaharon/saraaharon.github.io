@@ -80,32 +80,29 @@
             border-radius: 9999px;
         }
 
-        /* Clean Mobile Layout: Minimal Top Bar & Untouched Arrows */
+        /* Foolproof Mobile Top-HUD Stack (Zero Arrow Interference) */
         @media (max-width: 768px) {
             body {
                 -webkit-text-size-adjust: 100%;
+                overflow-x: hidden;
+            }
+            
+            /* Target ONLY top-positioned absolute elements and stack them naturally */
+            .absolute[class*="top-"] {
+                position: relative !important;
+                inset: auto !important;
+                width: 100% !important;
+                margin: 4px 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
+                box-sizing: border-box !important;
             }
 
-            /* Hide the bulky title/status cards on mobile to prevent overlapping */
-            .absolute.top-4 > div:not(:has(#sfx-btn, [id*="sfx"])) {
-                display: none !important;
-            }
-
-            /* Keep only the compact SFX toggle area floating neatly at the top right */
-            .absolute.top-4 {
-                top: 6px !important;
-                right: 6px !important;
-                left: auto !important;
-                width: auto !important;
-                padding: 4px !important;
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-            }
-
-            /* Ensure canvas fills the screen smoothly without header clash */
-            #game-canvas {
-                margin-top: 0;
+            /* Make glass panels fit the stacked mobile width perfectly */
+            .glass-panel {
+                width: 100% !important;
+                max-width: 100% !important;
             }
         }
     </style>
