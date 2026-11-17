@@ -80,33 +80,29 @@
             border-radius: 9999px;
         }
 
-        /* Mobile Layout & Top HUD Stack Fix */
+        /* Foolproof Mobile Layout Fix */
         @media (max-width: 768px) {
             body {
                 -webkit-text-size-adjust: 100%;
-            }
-            .glass-panel {
-                padding: 6px 10px !important;
-                font-size: 11px !important;
+                overflow-y: auto !important;
             }
             
-            /* Force all top absolute containers to stack in a single vertical column */
-            div.absolute.top-4 {
+            /* Unpin all absolute elements at the top and let them flow naturally */
+            body > div[class*="absolute"] {
                 position: relative !important;
-                top: auto !important;
-                left: auto !important;
-                right: auto !important;
+                inset: auto !important;
                 width: 100% !important;
+                margin-bottom: 8px !important;
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 6px !important;
-                padding: 4px 12px !important;
+                padding: 0 12px !important;
                 box-sizing: border-box !important;
             }
-            
-            /* Ensure the main canvas fills nicely below the stacked header */
-            #game-canvas {
-                margin-top: 5px;
+
+            .glass-panel {
+                padding: 6px 10px !important;
+                font-size: 11px !important;
             }
         }
     </style>
