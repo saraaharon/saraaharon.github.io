@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pangaea 2.0 // The Common Sky</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #070b1c;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: grab;
+        }
+        #game-canvas:active {
+            cursor: grabbing;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-panel {
+            background: rgba(7, 11, 28, 0.72);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(94, 240, 224, 0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        }
+        .gold-border {
+            border-color: rgba(240, 185, 77, 0.45);
+        }
+        .district-label {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -100%);
+            color: #f4f1e6;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-shadow: 0 2px 8px rgba(7, 11, 28, 0.95), 0 0 12px rgba(94, 240, 224, 0.4);
+            white-space: nowrap;
+            transition: opacity 0.25s ease;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 12px rgba(94, 240, 224, 0.35); }
+            50% { box-shadow: 0 0 24px rgba(240, 185, 77, 0.65); }
+        }
+        .prompt-badge {
+            animation: pulseGlow 2s infinite;
+        }
+        /* Custom scrollbar for catch log & teleport list */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 11, 28, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(94, 240, 224, 0.35);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="text-[#f4f1e6]">
+
+    <!-- 3D Viewport -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Floating 3D District Labels Container -->
+    <div id="labels-container" class="fixed inset-0 pointer-events-none overflow-hidden z-10"></div>
+
+    <!-- Top-Left Title & District Status -->
+    <div class="fixed top-4 left-4 z-20 flex flex-col gap-2 max-w-[90vw] sm:max-w-md pointer-events-none">
+        <div class="glass-panel rounded-2xl px-4 py-3 pointer-events-auto">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#f0b94d] shadow-[0_0_10px_#f0b94d]"></span>
+                <h1 class="text-sm sm:text-lg font-bold tracking-wider text-white">PANGAEA 2.0 <span class="text-[#5ef0e0]">//</span> THE COMMON SKY</h1>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-1 text-xs mono">
+                <span class="text-[#5ef0e0]">EXTENDED SKY ATLAS</span>
+                <span class="text-[#4a5578]">|</span>
+                <span id="current-district" class="text-[#f0b94d] font-semibold">01 THE SUNWARD CITADEL</span>
+            </div>
+        </div>
+
+        <!-- Mode & Quick Actions Bar -->
+        <div class="flex flex-wrap items-center gap-2 pointer-events-auto">
+            <button id="btn-xray" onclick="toggleXRay()" class="glass-panel rounded-xl px-3 py-1.5 text-xs mono font-semibold flex items-center gap-2 hover:border-[#5ef0e0] transition cursor-pointer">
+                <span id="xray-dot" class="w-2 h-2 rounded-full bg-[#9db4cc]"></span>
+                <span id="xray-status" class="text-[#f0b94d]">VIEW: SURFACE [X]</span>
+            </button>
+
+            <button id="btn-teleport-menu" onclick="togglePanel('teleport-panel')" class="glass-panel rounded-xl px-3 py-1.5 text-xs mono font-semibold text-[#5ef0e0] hover:bg-[#1e2a5e]/60 transition cursor-pointer">
+                ✦ SKY WARP
+            </button>
+
+            <button id="btn-fish-log" onclick="togglePanel('fish-panel')" class="glass-panel gold-border rounded-xl px-3 py-1.5 text-xs mono font-semibold text-[#f0b94d] hover:bg-[#1e2a5e]/60 transition cursor-pointer flex items-center gap-1.5">
+                <span>🎣 CATCH LOG:</span>
+                <span id="fish-count" class="bg-[#f0b94d]/20 px-1.5 py-0.5 rounded text-white">0</span>
+            </button>
+        </div>
+
+        <!-- Fast Travel / Sky Warp Dropdown -->
+        <div id="teleport-panel" class="hidden glass-panel rounded-2xl p-3 pointer-events-auto max-h-64 overflow-y-auto">
+            <div class="flex items-center justify-between mb-2 pb-1 border-b border-[#5ef0e0]/20">
+                <span class="text-xs mono font-bold text-[#5ef0e0]">DIRECT BEACON TELEPORT</span>
+                <button onclick="togglePanel('teleport-panel')" class="text-xs text-[#9db4cc] hover:text-white px-1">✕</button>
+            </div>
+            <div id="teleport-list" class="grid grid-cols-1 gap-1 text-xs"></div>
+        </div>
+
+        <!-- Fishing Catch Log Panel -->
+        <div id="fish-panel" class="hidden glass-panel gold-border rounded-2xl p-3 pointer-events-auto max-h-64 overflow-y-auto">
+            <div class="flex items-center justify-between mb-2 pb-1 border-b border-[#f0b94d]/25">
+                <span class="text-xs mono font-bold text-[#f0b94d]">ECHO LAKE AQUA-DEX</span>
+                <button onclick="togglePanel('fish-panel')" class="text-xs text-[#9db4cc] hover:text-white px-1">✕</button>
+            </div>
+            <div id="fish-list" class="space-y-1.5 text-xs text-[#9db4cc]">
+                <p class="italic">No catches yet. Visit 05 Echo Lake and cast your line!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top-Right Mode Badge & Audio Toggle -->
+    <div class="fixed top-4 right-4 z-20 flex flex-col items-end gap-2">
+        <div class="glass-panel rounded-2xl px-3.5 py-2 flex items-center gap-3">
+            <div class="text-right">
+                <div class="text-[10px] mono text-[#9db4cc] uppercase">Active Vessel / Mode</div>
+                <div id="mode-badge" class="text-xs sm:text-sm mono font-bold text-[#5ef0e0]">ON FOOT // EXPLORER</div>
+            </div>
+            <button id="btn-sound" onclick="toggleAudio()" title="Toggle Ambient Synth" class="p-2 rounded-xl bg-[#1e2a5e]/60 border border-[#5ef0e0]/30 text-[#5ef0e0] hover:text-white transition cursor-pointer text-xs mono">
+                🔇 SFX
+            </button>
+        </div>
+    </div>
+
+    <!-- Center-Bottom Context Action Prompt -->
+    <div id="action-prompt" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+        <button id="action-prompt-btn" onclick="triggerContextAction()" class="glass-panel gold-border prompt-badge rounded-full px-6 py-3 text-sm mono font-bold text-white flex items-center gap-2.5 hover:scale-105 transition cursor-pointer">
+            <span id="action-key" class="px-2 py-0.5 rounded-md bg-[#f0b94d] text-[#070b1c] font-extrabold">F</span>
+            <span id="action-text">BOARD SKY-SKIFF</span>
+        </button>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toast-banner" class="fixed top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 transition-opacity duration-300">
+        <div class="glass-panel gold-border rounded-full px-5 py-2 text-xs sm:text-sm mono font-semibold text-[#f4f1e6] shadow-lg flex items-center gap-2">
+            <span id="toast-icon">✨</span>
+            <span id="toast-msg">Welcome to Pangaea 2.0</span>
+        </div>
+    </div>
+
+    <!-- Bottom Controls Hint & Touch Controls -->
+    <div class="fixed bottom-4 left-4 right-4 z-20 flex flex-col sm:flex-row items-center justify-between gap-2 pointer-events-none">
+        <!-- Desktop Controls Legend -->
+        <div class="glass-panel rounded-2xl px-4 py-2 text-[11px] mono text-[#9db4cc] pointer-events-auto hidden md:flex items-center gap-4">
+            <span id="controls-hint">
+                <strong class="text-white">WASD / Arrows</strong> Move &nbsp;•&nbsp;
+                <strong class="text-white">Space</strong> Jump &nbsp;•&nbsp;
+                <strong class="text-white">Shift</strong> Sprint &nbsp;•&nbsp;
+                <strong class="text-white">Drag Mouse</strong> Orbit Camera &nbsp;•&nbsp;
+                <strong class="text-[#5ef0e0]">X</strong> X-Ray Scan
+            </span>
+        </div>
+
+        <!-- Mobile / Quick Touch Controls -->
+        <div class="flex md:hidden items-center justify-between w-full pointer-events-auto gap-2">
+            <div class="flex gap-1.5">
+                <button onpointerdown="touchState.forward=true" onpointerup="touchState.forward=false" onpointerleave="touchState.forward=false" class="glass-panel w-11 h-11 rounded-xl font-bold text-white active:bg-[#5ef0e0]/30">▲</button>
+                <button onpointerdown="touchState.backward=true" onpointerup="touchState.backward=false" onpointerleave="touchState.backward=false" class="glass-panel w-11 h-11 rounded-xl font-bold text-white active:bg-[#5ef0e0]/30">▼</button>
+                <button onpointerdown="touchState.left=true" onpointerup="touchState.left=false" onpointerleave="touchState.left=false" class="glass-panel w-11 h-11 rounded-xl font-bold text-white active:bg-[#5ef0e0]/30">◀</button>
+                <button onpointerdown="touchState.right=true" onpointerup="touchState.right=false" onpointerleave="touchState.right=false" class="glass-panel w-11 h-11 rounded-xl font-bold text-white active:bg-[#5ef0e0]/30">▶</button>
+            </div>
+            <div class="flex gap-1.5">
+                <button onpointerdown="touchState.up=true" onpointerup="touchState.up=false" onpointerleave="touchState.up=false" class="glass-panel px-3 h-11 rounded-xl text-xs mono font-bold text-[#5ef0e0] active:bg-[#5ef0e0]/30">JUMP/UP</button>
+                <button onpointerdown="touchState.down=true" onpointerup="touchState.down=false" onpointerleave="touchState.down=false" class="glass-panel px-3 h-11 rounded-xl text-xs mono font-bold text-[#f0b94d] active:bg-[#f0b94d]/30">DOWN</button>
+            </div>
+        </div>
+
+        <div class="text-[10px] mono text-[#4a5578] hidden lg:block">
+            Starry Cyber-Cloud Edition • Interactive 3D Sandbox
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. PALETTE & CONFIGURATION (Faithful to Pangaea 2.0 Python Spec)
+        // =========================================================================
+        const PALETTE = {
+            BG: 0x070b1c,
+            GOLD: 0xf0b94d,
+            AQUA: 0x5ef0e0,
+            LEAF: 0x6fd08c,
+            ROCK: 0x9db4cc,
+            CREAM: 0xf4f1e6,
+            SKY: 0x8fc3e8,
+            DIM: 0x4a5578,
+            COPPER: 0xd97736,
+            CYBER_CLOUD: 0x1e2a5e,
+            CYBER_GLOW: 0x00ffff
+        };
+
+        const SCALE = 3.5; // Scale factor so player has spacious islands & bridges
+        const SHELL_SOLID = 0.55;
+        const SHELL_XRAY = 0.06;
+
+        // Deterministic PRNG matching Python's seed behavior
+        function mulberry32(seed) {
+            return function() {
+                let t = seed += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        // =========================================================================
+        // 2. WEB AUDIO SYNTHESIZER (Cozy Sci-Fi Sound Effects)
+        // =========================================================================
+        let audioCtx = null;
+        let soundEnabled = false;
+
+        function toggleAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            soundEnabled = !soundEnabled;
+            document.getElementById('btn-sound').textContent = soundEnabled ? '🔊 SFX' : '🔇 SFX';
+            if (soundEnabled) playChime(523.25, 0.15);
+        }
+
+        function playChime(freq = 440, duration = 0.25, type = 'sine', vol = 0.08) {
+            if (!soundEnabled || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.25, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // 3. SCENE, RENDERER & CAMERA SETUP
+        // =========================================================================
+        const canvas = document.getElementById('game-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(PALETTE.BG);
+        scene.fog = new THREE.FogExp2(PALETTE.BG, 0.0038);
+
+        const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.2, 600);
+
+        // Lighting: Cosmic ambient + Golden Sunward Citadel glow + Aqua rim light
+        const ambientLight = new THREE.AmbientLight(0x8fc3e8, 0.85);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.PointLight(PALETTE.GOLD, 2.2, 220);
+        sunLight.position.set(0, 38, 0);
+        scene.add(sunLight);
+
+        const rimLight = new THREE.DirectionalLight(PALETTE.AQUA, 0.75);
+        rimLight.position.set(50, 80, -40);
+        scene.add(rimLight);
+
+        // =========================================================================
+        // 4. WORLD DATA STRUCTURES (Islands, Walkable Surfaces, Animators)
+        // =========================================================================
+        const islands = [];        // Stores island collision cylinders & metadata
+        const bridges = [];        // Stores walkable bridge spline segments
+        const rockShells = [];     // Meshes whose opacity toggles with X-Ray mode
+        const coreCrystals = [];   // Pulsing golden cores inside islands
+        const waterfalls = [];     // Particle systems cascading off island rims
+        const portals = [];        // Rotating golden/aqua portal rings
+        const labelElements = [];  // HTML elements projected to 3D coordinates
+
+        // District definitions converted from Python (X, Y -> Three.js X, -Z; Python Z -> Three.js Y)
+        const DISTRICTS_CONFIG = [
+            { id: "01", name: "01 The Sunward Citadel",     ang: 0,   dist: 0,    R: 6.0 * SCALE, depth: 8.5 * SCALE, y0: 0,          seed: 1 },
+            { id: "02", name: "02 The Glass Gardens",       ang: 135, dist: 12.0, R: 3.2 * SCALE, depth: 5.0 * SCALE, y0: 1.2 * SCALE, seed: 2 },
+            { id: "03", name: "03 Crystal Heights",         ang: 35,  dist: 13.0, R: 3.0 * SCALE, depth: 6.0 * SCALE, y0: 2.0 * SCALE, seed: 3 },
+            { id: "04", name: "04 Hearth Quarter",          ang: 210, dist: 12.5, R: 3.3 * SCALE, depth: 5.2 * SCALE, y0: 0.6 * SCALE, seed: 4 },
+            { id: "05", name: "05 Echo Lake",               ang: 325, dist: 9.5,  R: 2.6 * SCALE, depth: 4.5 * SCALE, y0: 0.2 * SCALE, seed: 5 },
+            { id: "06", name: "06 Arrival Port",            ang: 270, dist: 13.5, R: 2.5 * SCALE, depth: 3.5 * SCALE, y0: -0.8 * SCALE, seed: 6 },
+            { id: "07", name: "07 The Skyforge & Kilns",    ang: 75,  dist: 12.0, R: 2.9 * SCALE, depth: 5.0 * SCALE, y0: 1.5 * SCALE, seed: 7 },
+            { id: "08", name: "08 The Cloud Harvesters",    ang: 165, dist: 14.5, R: 2.8 * SCALE, depth: 4.8 * SCALE, y0: 0.9 * SCALE, seed: 8 },
+            { id: "09", name: "09 The Forum of Voices",     ang: 15,  dist: 9.0,  R: 2.5 * SCALE, depth: 4.2 * SCALE, y0: 0.4 * SCALE, seed: 9 },
+            { id: "10", name: "10 The Remembrance Gardens", ang: 355, dist: 13.5, R: 3.1 * SCALE, depth: 5.5 * SCALE, y0: 0.8 * SCALE, seed: 10 },
+            { id: "11", name: "11 Neighborhood Commons",    ang: 300, dist: 11.5, R: 2.7 * SCALE, depth: 4.6 * SCALE, y0: 0.5 * SCALE, seed: 11 }
+        ];
+
+        // =========================================================================
+        // 5. PROCEDURAL GEOMETRY BUILDERS (Ported from Python Helpers)
+        // =========================================================================
+        function addEdges(mesh, color, opacity = 0.75) {
+            const edges = new THREE.EdgesGeometry(mesh.geometry);
+            const line = new THREE.LineSegments(
+                edges,
+                new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+            );
+            mesh.add(line);
+        }
+
+        function createBox(cx, yBase, cz, w, d, h, faceColor, faceAlpha, edgeColor, edgeAlpha = 0.75) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const mat = new THREE.MeshStandardMaterial({
+                color: faceColor,
+                transparent: faceAlpha < 1,
+                opacity: faceAlpha,
+                roughness: 0.4,
+                metalness: 0.3
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(cx, yBase + h / 2, cz);
+            addEdges(mesh, edgeColor, edgeAlpha);
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function createTower(cx, yBase, cz, w, h, coreColor = PALETTE.GOLD) {
+            createBox(cx, yBase, cz, w, w, h, PALETTE.AQUA, 0.16, PALETTE.AQUA, 0.7);
+            const core = createBox(cx, yBase + 0.2, cz, w * 0.42, w * 0.42, h * 0.85, coreColor, 0.75, coreColor, 0.9);
+            core.material.emissive = new THREE.Color(coreColor);
+            core.material.emissiveIntensity = 0.45;
+        }
+
+        function createCone(cx, yBase, cz, r, h, color, alpha, edgeColor, sides = 24) {
+            const geo = new THREE.ConeGeometry(r, h, sides, 1, false);
+            const mat = new THREE.MeshStandardMaterial({
+                color,
+                transparent: alpha < 1,
+                opacity: alpha,
+                emissive: color,
+                emissiveIntensity: 0.25,
+                side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(cx, yBase + h / 2, cz);
+            addEdges(mesh, edgeColor, 0.85);
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function createDome(cx, yBase, cz, r, color, alpha, edgeColor) {
+            const geo = new THREE.SphereGeometry(r, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2);
+            const mat = new THREE.MeshStandardMaterial({
+                color,
+                transparent: alpha < 1,
+                opacity: alpha,
+                emissive: color,
+                emissiveIntensity: 0.15,
+                side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(cx, yBase, cz);
+            addEdges(mesh, edgeColor, 0.75);
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function createRing(cx, y, cz, r, color, alpha = 0.85, tube = 0.12, vertical = false) {
+            const geo = new THREE.TorusGeometry(r, tube, 10, 64);
+            const mat = new THREE.MeshBasicMaterial({
+                color,
+                transparent: alpha < 1,
+                opacity: alpha
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(cx, y, cz);
+            if (!vertical) {
+                mesh.rotation.x = Math.PI / 2;
+            }
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function createDisc(cx, y, cz, r, color, alpha = 0.65) {
+            const geo = new THREE.CircleGeometry(r, 48);
+            const mat = new THREE.MeshStandardMaterial({
+                color,
+                transparent: alpha < 1,
+                opacity: alpha,
+                emissive: color,
+                emissiveIntensity: 0.35,
+                side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.position.set(cx, y, cz);
+            scene.add(mesh);
+            return mesh;
+        }
+
+        function createTrees(cx, y0, cz, R, count, rng) {
+            const trunkGeo = new THREE.CylinderGeometry(0.12, 0.18, 0.8, 5);
+            const trunkMat = new THREE.MeshBasicMaterial({ color: PALETTE.COPPER });
+            const crownGeo = new THREE.ConeGeometry(0.65, 1.8, 6);
+            const crownMat = new THREE.MeshStandardMaterial({
+                color: PALETTE.LEAF,
+                emissive: PALETTE.LEAF,
+                emissiveIntensity: 0.15,
+                flatShading: true
+            });
+
+            for (let i = 0; i < count; i++) {
+                const ang = rng() * Math.PI * 2;
+                const rad = R * 0.82 * Math.sqrt(0.08 + rng() * 0.92);
+                const tx = cx + rad * Math.cos(ang);
+                const tz = cz + rad * Math.sin(ang);
+                const scale = 0.85 + rng() * 0.65;
+
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.set(tx, y0 + 0.4 * scale, tz);
+                trunk.scale.setScalar(scale);
+                scene.add(trunk);
+
+                const crown = new THREE.Mesh(crownGeo, crownMat);
+                crown.position.set(tx, y0 + 1.45 * scale, tz);
+                crown.scale.setScalar(scale);
+                scene.add(crown);
+            }
+        }
+
+        // Build procedural floating island with wobble rock shell, aqua wireframe, golden core & conduits
+        function buildIsland(cfg) {
+            const rng = mulberry32(cfg.seed * 1337);
+            const radAng = THREE.MathUtils.degToRad(cfg.ang);
+            const cx = cfg.dist * SCALE * Math.cos(radAng);
+            const cz = -cfg.dist * SCALE * Math.sin(radAng);
+            const y0 = cfg.y0;
+            const R = cfg.R;
+            const depth = cfg.depth;
+
+            const islandObj = {
+                ...cfg,
+                cx,
+                cz,
+                y0,
+                R,
+                depth
+            };
+            islands.push(islandObj);
+
+            // 1. Procedural inverted-cone rock underside mesh
+            const nth = 44;
+            const nt = 14;
+            const ph = [rng() * Math.PI * 2, rng() * Math.PI * 2, rng() * Math.PI * 2];
+
+            const positions = [];
+            const indices = [];
+
+            for (let j = 0; j < nt; j++) {
+                const t = j / (nt - 1);
+                for (let i = 0; i < nth; i++) {
+                    const th = (i / nth) * Math.PI * 2;
+                    const wob = 0.5 * Math.sin(3 * th + ph[0]) + 0.3 * Math.sin(5 * th + ph[1]);
+                    const wob2 = 0.25 * Math.sin(7 * th + 6 * t + ph[2]);
+                    const r = R * Math.pow(1 - t, 1.35) * (1 + 0.10 * wob + 0.06 * wob2);
+                    const px = cx + r * Math.cos(th);
+                    const pz = cz - r * Math.sin(th);
+                    const py = y0 - depth * Math.pow(t, 0.85) * (1 + 0.14 * wob);
+                    positions.push(px, py, pz);
+                }
+            }
+
+            for (let j = 0; j < nt - 1; j++) {
+                for (let i = 0; i < nth; i++) {
+                    const nextI = (i + 1) % nth;
+                    const a = j * nth + i;
+                    const b = j * nth + nextI;
+                    const c = (j + 1) * nth + i;
+                    const d = (j + 1) * nth + nextI;
+                    indices.push(a, c, b);
+                    indices.push(b, c, d);
+                }
+            }
+
+            const rockGeo = new THREE.BufferGeometry();
+            rockGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            rockGeo.setIndex(indices);
+            rockGeo.computeVertexNormals();
+
+            const rockMat = new THREE.MeshStandardMaterial({
+                color: PALETTE.ROCK,
+                transparent: true,
+                opacity: SHELL_SOLID,
+                roughness: 0.7,
+                metalness: 0.2,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const rockMesh = new THREE.Mesh(rockGeo, rockMat);
+            scene.add(rockMesh);
+            rockShells.push(rockMesh);
+
+            // 2. Aqua Wireframe Overlay
+            const wireMat = new THREE.MeshBasicMaterial({
+                color: PALETTE.AQUA,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.26
+            });
+            const wireMesh = new THREE.Mesh(rockGeo, wireMat);
+            scene.add(wireMesh);
+
+            // 3. Grassy Top Cap Surface
+            const topPositions = [cx, y0 + 0.15, cz];
+            const topIndices = [];
+            for (let i = 0; i < nth; i++) {
+                topPositions.push(positions[i * 3], y0, positions[i * 3 + 2]);
+                const next = (i + 1) % nth;
+                topIndices.push(0, i + 1, next + 1);
+            }
+            const topGeo = new THREE.BufferGeometry();
+            topGeo.setAttribute('position', new THREE.Float32BufferAttribute(topPositions, 3));
+            topGeo.setIndex(topIndices);
+            topGeo.computeVertexNormals();
+
+            const topMat = new THREE.MeshStandardMaterial({
+                color: PALETTE.LEAF,
+                transparent: true,
+                opacity: 0.62,
+                roughness: 0.85,
+                side: THREE.DoubleSide
+            });
+            const topMesh = new THREE.Mesh(topGeo, topMat);
+            scene.add(topMesh);
+
+            // 4. Suspended Golden Core Sphere & Internal Energy Conduits (Visible in X-Ray!)
+            const coreY = y0 - depth * 0.38;
+            const coreGeo = new THREE.OctahedronGeometry(R * 0.16, 1);
+            const coreMat = new THREE.MeshStandardMaterial({
+                color: PALETTE.GOLD,
+                emissive: PALETTE.GOLD,
+                emissiveIntensity: 0.85,
+                roughness: 0.2
+            });
+            const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+            coreMesh.position.set(cx, coreY, cz);
+            scene.add(coreMesh);
+            coreCrystals.push({ mesh: coreMesh, baseY: coreY, phase: rng() * Math.PI * 2 });
+
+            // Core outer halo ring
+            const halo = createRing(cx, coreY, cz, R * 0.25, PALETTE.GOLD, 0.7, 0.08, false);
+            coreCrystals.push({ mesh: halo, baseY: coreY, phase: rng() * Math.PI * 2, isRing: true });
+
+            // Internal aqua energy conduits connecting rim -> core -> bottom tip
+            const conduitMat = new THREE.LineBasicMaterial({ color: PALETTE.AQUA, transparent: true, opacity: 0.55 });
+            const offsetAng = rng();
+            for (let k = 0; k < 6; k++) {
+                const a = (k / 6) * Math.PI * 2 + offsetAng;
+                const pts = [
+                    new THREE.Vector3(cx + 0.58 * R * Math.cos(a), y0, cz - 0.58 * R * Math.sin(a)),
+                    new THREE.Vector3(cx + 0.22 * R * Math.cos(a), y0 - depth * 0.52, cz - 0.22 * R * Math.sin(a)),
+                    new THREE.Vector3(cx, y0 - depth * 0.94, cz)
+                ];
+                const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+                scene.add(new THREE.Line(lineGeo, conduitMat));
+            }
+
+            // 5. Trees (skip center on Echo Lake so water is clear)
+            if (cfg.id !== "05") {
+                createTrees(cx, y0, cz, R, Math.floor(R * 1.1), rng);
+            } else {
+                createTrees(cx, y0, cz, R * 0.95, 8, rng);
+            }
+
+            // 6. Cascading Aqua Waterfall Particles
+            const numFalls = cfg.id === "01" ? 4 : 1;
+            const fallAngles = cfg.id === "01" ? [0.7, 2.3, 3.9, 5.5] : [rng() * Math.PI * 2];
+            const particlesPerFall = 28;
+            const totalPts = numFalls * particlesPerFall;
+            const fallPos = new Float32Array(totalPts * 3);
+            const fallPhases = new Float32Array(totalPts);
+
+            for (let f = 0; f < numFalls; f++) {
+                for (let p = 0; p < particlesPerFall; p++) {
+                    fallPhases[f * particlesPerFall + p] = p / particlesPerFall;
+                }
+            }
+            const fallGeo = new THREE.BufferGeometry();
+            fallGeo.setAttribute('position', new THREE.BufferAttribute(fallPos, 3));
+            const fallMat = new THREE.PointsMaterial({
+                color: PALETTE.AQUA,
+                size: 0.55,
+                transparent: true,
+                opacity: 0.85
+            });
+            const fallPoints = new THREE.Points(fallGeo, fallMat);
+            scene.add(fallPoints);
+            waterfalls.push({
+                points: fallPoints,
+                cx, cz, y0, R, depth,
+                angles: fallAngles,
+                phases: fallPhases,
+                ppf: particlesPerFall
+            });
+
+            // 7. Floating HTML District Label
+            const lbl = document.createElement('div');
+            lbl.className = 'district-label mono';
+            lbl.textContent = cfg.name.toUpperCase();
+            document.getElementById('labels-container').appendChild(lbl);
+            labelElements.push({
+                el: lbl,
+                pos: new THREE.Vector3(cx, y0 + (cfg.id === "01" ? 36 : 14), cz)
+            });
+
+            return islandObj;
+        }
+
+        // =========================================================================
+        // 6. BUILD ALL 11 DISTRICTS & ARCHITECTURE
+        // =========================================================================
+        const districtMap = {};
+        DISTRICTS_CONFIG.forEach(cfg => {
+            districtMap[cfg.id] = buildIsland(cfg);
+        });
+
+        // --- 01 The Sunward Citadel ---
+        {
+            const d = districtMap["01"];
+            [3.2, 4.0, 4.8].forEach(rr => createRing(0, 0.15, 0, rr * SCALE, PALETTE.LEAF, 0.7, 0.14));
+            for (let k = 0; k < 8; k++) {
+                const a = (k / 8) * Math.PI * 2;
+                const pts = [
+                    new THREE.Vector3(1.8 * SCALE * Math.cos(a), 0.15, -1.8 * SCALE * Math.sin(a)),
+                    new THREE.Vector3(5.2 * SCALE * Math.cos(a), 0.15, -5.2 * SCALE * Math.sin(a))
+                ];
+                scene.add(new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints(pts),
+                    new THREE.LineBasicMaterial({ color: PALETTE.GOLD, transparent: true, opacity: 0.65 })
+                ));
+            }
+            createTower(0, 0, 0, 2.8 * SCALE, 1.5 * SCALE, PALETTE.GOLD);
+            createTower(0, 1.5 * SCALE, 0, 2.0 * SCALE, 3.0 * SCALE, PALETTE.GOLD);
+            createTower(0, 4.5 * SCALE, 0, 1.3 * SCALE, 2.8 * SCALE, PALETTE.GOLD);
+            createCone(0, 7.3 * SCALE, 0, 0.55 * SCALE, 3.0 * SCALE, PALETTE.GOLD, 0.55, PALETTE.GOLD);
+
+            [[2.2, 2.2], [-2.2, 2.2], [2.2, -2.2], [-2.2, -2.2]].forEach(([sx, sz]) => {
+                createTower(sx * SCALE, 0, sz * SCALE, 0.65 * SCALE, 2.4 * SCALE, PALETTE.GOLD);
+                createDome(sx * SCALE, 2.4 * SCALE, sz * SCALE, 0.42 * SCALE, PALETTE.GOLD, 0.6, PALETTE.GOLD);
+            });
+        }
+
+        // --- 02 The Glass Gardens ---
+        {
+            const d = districtMap["02"];
+            [[-0.7, 0.5, 0.85], [0.8, 0.2, 0.75], [0.0, -0.8, 0.8]].forEach(([dx, dz, rr]) => {
+                createDome(d.cx + dx * SCALE, d.y0 + 0.1, d.cz - dz * SCALE, rr * SCALE, PALETTE.AQUA, 0.24, PALETTE.AQUA);
+            });
+        }
+
+        // --- 03 Crystal Heights ---
+        {
+            const d = districtMap["03"];
+            createCone(d.cx, d.y0 + 0.1, d.cz, 0.75 * SCALE, 6.5 * SCALE, PALETTE.AQUA, 0.42, 0xffffff, 6);
+            createCone(d.cx, d.y0 + 0.1, d.cz, 0.30 * SCALE, 4.5 * SCALE, PALETTE.GOLD, 0.75, PALETTE.GOLD, 6);
+            const ring = createRing(d.cx + 1.3 * SCALE, d.y0 + 1.8 * SCALE, d.cz, 0.9 * SCALE, PALETTE.GOLD, 0.9, 0.16, true);
+            portals.push(ring);
+        }
+
+        // --- 04 Hearth Quarter ---
+        {
+            const d = districtMap["04"];
+            const rng = mulberry32(404);
+            for (let k = 0; k < 8; k++) {
+                const ang = rng() * Math.PI * 2;
+                const rad = d.R * 0.58 * Math.sqrt(0.15 + rng() * 0.85);
+                createTower(
+                    d.cx + rad * Math.cos(ang),
+                    d.y0,
+                    d.cz - rad * Math.sin(ang),
+                    0.55 * SCALE,
+                    (0.8 + rng() * 0.7) * SCALE,
+                    PALETTE.GOLD
+                );
+            }
+        }
+
+        // --- 05 Echo Lake (Fishing Spot + Pier + Ripples) ---
+        let echoLakeInfo = null;
+        let lakeRippleMesh = null;
+        {
+            const d = districtMap["05"];
+            const lakeR = 1.75 * SCALE;
+            createDisc(d.cx, d.y0 + 0.12, d.cz, lakeR, PALETTE.AQUA, 0.72);
+            createRing(d.cx, d.y0 + 0.18, d.cz, lakeR + 0.15, PALETTE.GOLD, 0.85, 0.18);
+
+            // Animated ripple ring inside Echo Lake
+            lakeRippleMesh = createRing(d.cx, d.y0 + 0.2, d.cz, lakeR * 0.3, 0xffffff, 0.65, 0.08);
+
+            // Wooden/Gold Fishing Pier extending from island rim into the lake
+            const pierAngle = Math.PI * 0.75;
+            const pierLen = 4.2;
+            const pierX = d.cx + (lakeR - 0.6) * Math.cos(pierAngle);
+            const pierZ = d.cz + (lakeR - 0.6) * Math.sin(pierAngle);
+            const pier = createBox(pierX, d.y0 + 0.15, pierZ, 2.2, pierLen, 0.25, PALETTE.COPPER, 0.95, PALETTE.GOLD, 0.9);
+            pier.rotation.y = -pierAngle + Math.PI / 2;
+
+            // Lantern post on pier
+            const tipX = d.cx + (lakeR - 2.3) * Math.cos(pierAngle);
+            const tipZ = d.cz + (lakeR - 2.3) * Math.sin(pierAngle);
+            createBox(tipX + 0.8, d.y0 + 0.3, tipZ, 0.2, 0.2, 2.2, PALETTE.GOLD, 0.9, PALETTE.AQUA);
+
+            echoLakeInfo = {
+                cx: d.cx,
+                cz: d.cz,
+                y0: d.y0,
+                lakeR,
+                pierTip: new THREE.Vector3(tipX, d.y0 + 0.4, tipZ)
+            };
+        }
+
+        // --- 06 Arrival Port ---
+        {
+            const d = districtMap["06"];
+            createDisc(d.cx, d.y0 + 0.12, d.cz, 1.3 * SCALE, PALETTE.AQUA, 0.65);
+            const portal = createRing(d.cx, d.y0 + 1.5 * SCALE, d.cz, 1.2 * SCALE, PALETTE.GOLD, 0.95, 0.24, true);
+            portals.push(portal);
+
+            // Dashed Aqua Beacon Arc to Echo Lake
+            const d5 = districtMap["05"];
+            const arcPts = [];
+            for (let i = 0; i <= 40; i++) {
+                const s = i / 40;
+                arcPts.push(new THREE.Vector3(
+                    d.cx + (d5.cx - d.cx) * s,
+                    d.y0 + (d5.y0 - d.y0) * s + 7.5 * Math.sin(Math.PI * s) + 2.0,
+                    d.cz + (d5.cz - d.cz) * s
+                ));
+            }
+            const arcLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(arcPts),
+                new THREE.LineDashedMaterial({ color: PALETTE.AQUA, dashSize: 1.4, gapSize: 0.9, transparent: true, opacity: 0.85 })
+            );
+            arcLine.computeLineDistances();
+            scene.add(arcLine);
+        }
+
+        // --- 07 The Skyforge & Kilns ---
+        {
+            const d = districtMap["07"];
+            createBox(d.cx - 0.6 * SCALE, d.y0, d.cz, 0.9 * SCALE, 0.9 * SCALE, 1.9 * SCALE, PALETTE.COPPER, 0.8, PALETTE.GOLD, 0.9);
+            createBox(d.cx + 0.6 * SCALE, d.y0, d.cz - 0.4 * SCALE, 0.7 * SCALE, 0.7 * SCALE, 2.4 * SCALE, PALETTE.COPPER, 0.8, PALETTE.GOLD, 0.9);
+        }
+
+        // --- 08 The Cloud Harvesters ---
+        {
+            const d = districtMap["08"];
+            createDome(d.cx, d.y0 + 0.1, d.cz, 1.2 * SCALE, PALETTE.SKY, 0.45, PALETTE.AQUA);
+        }
+
+        // --- 09 The Forum of Voices ---
+        {
+            const d = districtMap["09"];
+            createRing(d.cx, d.y0 + 0.25, d.cz, 1.3 * SCALE, PALETTE.GOLD, 0.9, 0.22, false);
+            createRing(d.cx, d.y0 + 0.55, d.cz, 0.9 * SCALE, PALETTE.AQUA, 0.75, 0.14, false);
+        }
+
+        // --- 10 The Remembrance Gardens ---
+        {
+            const d = districtMap["10"];
+            createDome(d.cx, d.y0 + 0.1, d.cz, 1.0 * SCALE, PALETTE.LEAF, 0.5, PALETTE.GOLD);
+        }
+
+        // --- 11 Neighborhood Commons ---
+        {
+            const d = districtMap["11"];
+            [[-0.55, 0], [0.55, 0], [0, -0.55]].forEach(([dx, dz]) => {
+                createTower(d.cx + dx * SCALE, d.y0, d.cz + dz * SCALE, 0.5 * SCALE, 0.95 * SCALE, PALETTE.GOLD);
+            });
+        }
+
+        // =========================================================================
+        // 7. WALKABLE GOLDEN ENERGY BRIDGES
+        // =========================================================================
+        const citadel = districtMap["01"];
+        Object.values(districtMap).forEach(target => {
+            if (target.id === "01") return;
+            const ang = Math.atan2(-(target.cz - citadel.cz), target.cx - citadel.cx);
+            const sx = (citadel.R - 0.8) * Math.cos(ang);
+            const sz = -(citadel.R - 0.8) * Math.sin(ang);
+            const ex = target.cx - (target.R - 0.8) * Math.cos(ang);
+            const ez = target.cz + (target.R - 0.8) * Math.sin(ang);
+
+            const segments = 28;
+            const bridgePts = [];
+            for (let i = 0; i <= segments; i++) {
+                const s = i / segments;
+                const bx = sx + (ex - sx) * s;
+                const bz = sz + (ez - sz) * s;
+                const by = 0.15 + (target.y0 - 0.15) * s + 3.2 * Math.sin(Math.PI * s);
+                bridgePts.push(new THREE.Vector3(bx, by, bz));
+            }
+
+            // Store segments for player walking ground collision
+            for (let i = 0; i < segments; i++) {
+                bridges.push({ a: bridgePts[i], b: bridgePts[i + 1], width: 2.8 });
+            }
+
+            // Glowing golden walkway ribbon
+            const curve = new THREE.CatmullRomCurve3(bridgePts);
+            const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.35, 6, false);
+            const tubeMat = new THREE.MeshBasicMaterial({
+                color: PALETTE.GOLD,
+                transparent: true,
+                opacity: 0.72
+            });
+            scene.add(new THREE.Mesh(tubeGeo, tubeMat));
+
+            // Side handrails in Aqua
+            const railGeo = new THREE.BufferGeometry().setFromPoints(bridgePts.map(p => new THREE.Vector3(p.x, p.y + 0.5, p.z)));
+            scene.add(new THREE.Line(railGeo, new THREE.LineBasicMaterial({ color: PALETTE.CREAM, transparent: true, opacity: 0.85 })));
+        });
+
+        // =========================================================================
+        // 8. CYBER-CLOUDS & DRIFTING TWINKLING STARFIELD
+        // =========================================================================
+        function createCyberCloud(cx, cy, cz, rx, ry, rz) {
+            const geo = new THREE.SphereGeometry(1, 16, 10);
+            geo.scale(rx, ry, rz);
+            const mat = new THREE.MeshBasicMaterial({
+                color: PALETTE.CYBER_CLOUD,
+                transparent: true,
+                opacity: 0.24,
+                depthWrite: false
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(cx, cy, cz);
+            addEdges(mesh, PALETTE.CYBER_GLOW, 0.25);
+            scene.add(mesh);
+            return mesh;
+        }
+
+        const cyberClouds = [
+            createCyberCloud(12 * SCALE, 5 * SCALE, -12 * SCALE, 4.5 * SCALE, 1.8 * SCALE, 3.5 * SCALE),
+            createCyberCloud(14 * SCALE, -3 * SCALE, -8 * SCALE, 5.0 * SCALE, 2.0 * SCALE, 4.0 * SCALE),
+            createCyberCloud(-13 * SCALE, 2 * SCALE, -11 * SCALE, 4.0 * SCALE, 1.5 * SCALE, 4.0 * SCALE),
+            createCyberCloud(-11 * SCALE, 7 * SCALE, 10 * SCALE, 4.2 * SCALE, 1.6 * SCALE, 3.6 * SCALE)
+        ];
+
+        // Starfield
+        const starRng = mulberry32(99);
+        const numStars = 420;
+        const starBasePos = new Float32Array(numStars * 3);
+        const starCurrPos = new Float32Array(numStars * 3);
+        const starPhases = new Float32Array(numStars);
+
+        for (let i = 0; i < numStars; i++) {
+            const x = (starRng() - 0.5) * 260;
+            const y = (starRng() - 0.5) * 140;
+            const z = (starRng() - 0.5) * 260;
+            starBasePos[i * 3] = starCurrPos[i * 3] = x;
+            starBasePos[i * 3 + 1] = starCurrPos[i * 3 + 1] = y;
+            starBasePos[i * 3 + 2] = starCurrPos[i * 3 + 2] = z;
+            starPhases[i] = starRng() * Math.PI * 2;
+        }
+        const starGeo = new THREE.BufferGeometry();
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starCurrPos, 3));
+        const starMat = new THREE.PointsMaterial({ color: PALETTE.CREAM, size: 0.7, transparent: true, opacity: 0.8 });
+        const starField = new THREE.Points(starGeo, starMat);
+        scene.add(starField);
+
+        // =========================================================================
+        // 9. STYLIZED EXPLORER AVATAR & GOLDEN DIAMOND AIRSHIPS
+        // =========================================================================
+        const playerGroup = new THREE.Group();
+        // Explorer cloak body
+        const cloak = new THREE.Mesh(
+            new THREE.ConeGeometry(0.65, 1.7, 12),
+            new THREE.MeshStandardMaterial({ color: 0x131b3a, roughness: 0.5 })
+        );
+        cloak.position.y = 0.85;
+        addEdges(cloak, PALETTE.AQUA, 0.55);
+        playerGroup.add(cloak);
+
+        // Hood / Head with glowing cyan visor
+        const head = new THREE.Mesh(
+            new THREE.SphereGeometry(0.36, 14, 12),
+            new THREE.MeshStandardMaterial({ color: 0x1e2a5e })
+        );
+        head.position.y = 1.85;
+        playerGroup.add(head);
+
+        const visor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.42, 0.14, 0.25),
+            new THREE.MeshBasicMaterial({ color: PALETTE.AQUA })
+        );
+        visor.position.set(0, 1.86, 0.26);
+        playerGroup.add(visor);
+
+        // Floating golden scarf ring
+        const scarf = createRing(0, 1.55, 0, 0.44, PALETTE.GOLD, 0.9, 0.06, false);
+        playerGroup.add(scarf);
+
+        // Start player on Sunward Citadel plaza clear of central tower
+        playerGroup.position.set(0, 0.2, 11.5);
+        scene.add(playerGroup);
+
+        // --- Player Pilotable Airship ("The Golden Skiff") ---
+        function buildAirshipMesh(isPlayerShip = true) {
+            const ship = new THREE.Group();
+            // Sleek Diamond Hull (matches matplotlib marker="D")
+            const hullGeo = new THREE.OctahedronGeometry(1.8, 0);
+            hullGeo.scale(1.1, 0.45, 2.1);
+            const hullMat = new THREE.MeshStandardMaterial({
+                color: isPlayerShip ? PALETTE.GOLD : PALETTE.CREAM,
+                emissive: isPlayerShip ? PALETTE.GOLD : PALETTE.AQUA,
+                emissiveIntensity: 0.35,
+                metalness: 0.6,
+                roughness: 0.25
+            });
+            const hull = new THREE.Mesh(hullGeo, hullMat);
+            addEdges(hull, 0xffffff, 0.9);
+            ship.add(hull);
+
+            // Aqua Energy Wings
+            const wingGeo = new THREE.BoxGeometry(4.6, 0.08, 1.1);
+            const wingMat = new THREE.MeshBasicMaterial({ color: PALETTE.AQUA, transparent: true, opacity: 0.65 });
+            const wings = new THREE.Mesh(wingGeo, wingMat);
+            wings.position.z = -0.3;
+            ship.add(wings);
+
+            // Thruster Core
+            const thruster = new THREE.Mesh(
+                new THREE.SphereGeometry(0.45, 10, 10),
+                new THREE.MeshBasicMaterial({ color: PALETTE.CYBER_GLOW })
+            );
+            thruster.position.z = -3.4;
+            ship.add(thruster);
+
+            return ship;
+        }
+
+        const playerShip = buildAirshipMesh(true);
+        // Parked neatly on the southern plaza of the Sunward Citadel
+        playerShip.position.set(8.5, 1.2, 13.5);
+        playerShip.rotation.y = Math.PI * 0.25;
+        scene.add(playerShip);
+
+        // AI Patrol Ship orbiting the archipelago
+        const aiShip = buildAirshipMesh(false);
+        scene.add(aiShip);
+
+        // =========================================================================
+        // 10. FISHING SYSTEM (Echo Lake Minigame)
+        // =========================================================================
+        const COSMIC_FISH = [
+            { name: "Starlight Koi", rarity: "Uncommon", desc: "Scales shimmer with captured nebula light." },
+            { name: "Data-Shard Minnow", rarity: "Common", desc: "Carries encrypted echoes from the Citadel." },
+            { name: "Nebula Jelly", rarity: "Rare", desc: "Translucent medusa pulsing with cyan bioluminescence." },
+            { name: "Sunward Goldfin", rarity: "Legendary", desc: "Blessed by the golden core of Pangaea 2.0!" },
+            { name: "Cyber-Cloud Carp", rarity: "Common", desc: "Feeds on condensed atmospheric plasma." },
+            { name: "Void Boot", rarity: "Relic", desc: "How did this drift up from the abyss?!" }
+        ];
+
+        const fishingState = {
+            status: 'IDLE', // IDLE | CASTING | BITE
+            timer: 0,
+            bobber: null,
+            line: null,
+            catches: []
+        };
+
+        // Fishing bobber & line visuals
+        const bobberMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.28, 12, 12),
+            new THREE.MeshBasicMaterial({ color: PALETTE.GOLD })
+        );
+        bobberMesh.visible = false;
+        scene.add(bobberMesh);
+
+        const fishingLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+        const fishingLine = new THREE.Line(
+            fishingLineGeo,
+            new THREE.LineBasicMaterial({ color: PALETTE.AQUA, transparent: true, opacity: 0.9 })
+        );
+        fishingLine.visible = false;
+        scene.add(fishingLine);
+
+        function startFishing() {
+            fishingState.status = 'CASTING';
+            fishingState.timer = 2.0 + Math.random() * 2.8;
+
+            // Place bobber in the center-ish area of Echo Lake
+            const angle = Math.atan2(playerGroup.position.z - echoLakeInfo.cz, playerGroup.position.x - echoLakeInfo.cx);
+            const targetDist = echoLakeInfo.lakeR * 0.42;
+            bobberMesh.position.set(
+                echoLakeInfo.cx + Math.cos(angle) * targetDist,
+                echoLakeInfo.y0 + 0.25,
+                echoLakeInfo.cz + Math.sin(angle) * targetDist
+            );
+            bobberMesh.material.color.setHex(PALETTE.GOLD);
+            bobberMesh.visible = true;
+            fishingLine.visible = true;
+
+            playChime(392.0, 0.2);
+            showToast("🎣", "Line cast into Echo Lake... Wait for a bite!");
+        }
+
+        function reelInFish() {
+            if (fishingState.status === 'BITE') {
+                const caught = COSMIC_FISH[Math.floor(Math.random() * COSMIC_FISH.length)];
+                fishingState.catches.unshift(caught);
+                updateFishHUD();
+                playChime(659.25, 0.35);
+                showToast("✨", `Caught ${caught.name} (${caught.rarity})!`);
+            } else {
+                showToast("💨", "Reeled in too early—nothing on the hook.");
+            }
+            cancelFishing();
+        }
+
+        function cancelFishing() {
+            fishingState.status = 'IDLE';
+            bobberMesh.visible = false;
+            fishingLine.visible = false;
+        }
+
+        function updateFishHUD() {
+            document.getElementById('fish-count').textContent = fishingState.catches.length;
+            const listEl = document.getElementById('fish-list');
+            if (fishingState.catches.length === 0) return;
+            listEl.innerHTML = fishingState.catches.map(f => `
+                <div class="p-2 rounded-xl bg-[#1e2a5e]/45 border border-[#f0b94d]/25">
+                    <div class="flex justify-between font-bold text-white">
+                        <span>${f.name}</span>
+                        <span class="text-[#5ef0e0] text-[10px] mono">${f.rarity}</span>
+                    </div>
+                    <div class="text-[11px] text-[#9db4cc] mt-0.5">${f.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        // =========================================================================
+        // 11. GAMEPLAY STATE, INPUTS & CAMERA ORBIT
+        // =========================================================================
+        const gameState = {
+            mode: 'WALK', // 'WALK' | 'PILOT'
+            xray: false,
+            currentContextAction: null, // 'BOARD' | 'LAND' | 'FISH_CAST' | 'FISH_REEL'
+            playerVelY: 0,
+            grounded: true,
+            shipVel: new THREE.Vector3(),
+            camYaw: 0,
+            camPitch: 0.38,
+            camDist: 14
+        };
+
+        const keys = {};
+        const touchState = { forward: false, backward: false, left: false, right: false, up: false, down: false };
+
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            keys[k] = true;
+
+            if (k === 'x') toggleXRay();
+            if (k === 'f' || k === 'e') {
+                triggerContextAction(k);
+            }
+            if (e.code === 'Space' && gameState.mode === 'WALK' && gameState.grounded) {
+                gameState.playerVelY = 13.5;
+                gameState.grounded = false;
+                if (fishingState.status !== 'IDLE') cancelFishing();
+                playChime(330, 0.12);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Mouse & Touch Camera Orbit
+        let isDragging = false;
+        let prevPointer = { x: 0, y: 0 };
+
+        canvas.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            prevPointer = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener('pointerup', () => { isDragging = false; });
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - prevPointer.x;
+            const dy = e.clientY - prevPointer.y;
+            prevPointer = { x: e.clientX, y: e.clientY };
+            gameState.camYaw -= dx * 0.0065;
+            gameState.camPitch = THREE.MathUtils.clamp(gameState.camPitch + dy * 0.0055, 0.08, 1.35);
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            gameState.camDist = THREE.MathUtils.clamp(gameState.camDist + e.deltaY * 0.015, 6, 48);
+        }, { passive: true });
+
+        // =========================================================================
+        // 12. UI HELPERS & INTERACTIONS
+        // =========================================================================
+        function toggleXRay() {
+            gameState.xray = !gameState.xray;
+            const statusEl = document.getElementById('xray-status');
+            const dotEl = document.getElementById('xray-dot');
+            if (gameState.xray) {
+                statusEl.textContent = "VIEW: X-RAY ACTIVE [X]";
+                statusEl.className = "text-[#5ef0e0]";
+                dotEl.className = "w-2 h-2 rounded-full bg-[#5ef0e0] shadow-[0_0_8px_#5ef0e0]";
+                playChime(587.33, 0.2);
+            } else {
+                statusEl.textContent = "VIEW: SURFACE [X]";
+                statusEl.className = "text-[#f0b94d]";
+                dotEl.className = "w-2 h-2 rounded-full bg-[#9db4cc]";
+                playChime(440.0, 0.2);
+            }
+        }
+
+        function togglePanel(panelId) {
+            const el = document.getElementById(panelId);
+            el.classList.toggle('hidden');
+        }
+
+        let toastTimeout = null;
+        function showToast(icon, msg) {
+            const banner = document.getElementById('toast-banner');
+            document.getElementById('toast-icon').textContent = icon;
+            document.getElementById('toast-msg').textContent = msg;
+            banner.classList.remove('opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => banner.classList.add('opacity-0'), 3200);
+        }
+
+        // Populate Sky Warp Fast-Travel Menu
+        const teleportList = document.getElementById('teleport-list');
+        islands.forEach(isl => {
+            const btn = document.createElement('button');
+            btn.className = "text-left px-2.5 py-1.5 rounded-lg hover:bg-[#5ef0e0]/20 text-[#f4f1e6] mono flex items-center justify-between transition cursor-pointer";
+            btn.innerHTML = `<span>${isl.name}</span><span class="text-[#5ef0e0] text-[10px]">WARP →</span>`;
+            btn.onclick = () => {
+                warpToIsland(isl);
+                togglePanel('teleport-panel');
+            };
+            teleportList.appendChild(btn);
+        });
+
+        function warpToIsland(isl) {
+            cancelFishing();
+            const spawnOffset = isl.id === "01" ? 11.5 : (isl.id === "05" ? isl.R * 0.68 : 0);
+            const targetPos = new THREE.Vector3(isl.cx, isl.y0 + 0.5, isl.cz + spawnOffset);
+            if (gameState.mode === 'PILOT') {
+                playerShip.position.set(isl.cx, isl.y0 + 3.5, isl.cz + spawnOffset);
+                gameState.shipVel.set(0, 0, 0);
+            } else {
+                playerGroup.position.copy(targetPos);
+                gameState.playerVelY = 0;
+            }
+            playChime(659.25, 0.25);
+            showToast("✦", `Warped to ${isl.name}`);
+        }
+
+        function triggerContextAction(forcedKey = null) {
+            const act = gameState.currentContextAction;
+            if (!act) return;
+
+            if (act === 'BOARD' && (!forcedKey || forcedKey === 'f')) {
+                cancelFishing();
+                gameState.mode = 'PILOT';
+                playerGroup.visible = false;
+                gameState.camDist = 20;
+                document.getElementById('mode-badge').textContent = "PILOTING // GOLDEN SKIFF";
+                document.getElementById('mode-badge').className = "text-xs sm:text-sm mono font-bold text-[#f0b94d]";
+                document.getElementById('controls-hint').innerHTML = `
+                    <strong class="text-white">W/S</strong> Thrust &nbsp;•&nbsp;
+                    <strong class="text-white">A/D</strong> Turn &nbsp;•&nbsp;
+                    <strong class="text-white">Space/Shift</strong> Ascend/Descend &nbsp;•&nbsp;
+                    <strong class="text-[#f0b94d]">F</strong> Disembark
+                `;
+                playChime(523.25, 0.25);
+                showToast("🚀", "Engines online! Fly freely across Pangaea 2.0.");
+            } else if (act === 'LAND' && (!forcedKey || forcedKey === 'f')) {
+                gameState.mode = 'WALK';
+                gameState.shipVel.set(0, 0, 0);
+                playerGroup.position.set(playerShip.position.x + 2.5, playerShip.position.y + 0.5, playerShip.position.z);
+                playerGroup.visible = true;
+                gameState.camDist = 14;
+                document.getElementById('mode-badge').textContent = "ON FOOT // EXPLORER";
+                document.getElementById('mode-badge').className = "text-xs sm:text-sm mono font-bold text-[#5ef0e0]";
+                document.getElementById('controls-hint').innerHTML = `
+                    <strong class="text-white">WASD / Arrows</strong> Move &nbsp;•&nbsp;
+                    <strong class="text-white">Space</strong> Jump &nbsp;•&nbsp;
+                    <strong class="text-white">Shift</strong> Sprint &nbsp;•&nbsp;
+                    <strong class="text-white">Drag Mouse</strong> Orbit Camera &nbsp;•&nbsp;
+                    <strong class="text-[#5ef0e0]">X</strong> X-Ray Scan
+                `;
+                playChime(440, 0.2);
+                showToast("🥾", "Disembarked onto floating district.");
+            } else if (act === 'FISH_CAST' && (!forcedKey || forcedKey === 'e')) {
+                startFishing();
+            } else if (act === 'FISH_REEL' && (!forcedKey || forcedKey === 'e')) {
+                reelInFish();
+            }
+        }
+
+        // =========================================================================
+        // 13. GROUND COLLISION & NEAREST DISTRICT DETECTION
+        // =========================================================================
+        function getGroundHeightAt(x, y, z) {
+            let bestY = null;
+
+            // Check islands
+            for (const isl of islands) {
+                const dx = x - isl.cx;
+                const dz = z - isl.cz;
+                const dist = Math.hypot(dx, dz);
+                if (dist <= isl.R * 0.98) {
+                    if (y >= isl.y0 - 2.5 && y <= isl.y0 + 12.0) {
+                        if (bestY === null || isl.y0 > bestY) bestY = isl.y0;
+                    }
+                }
+            }
+
+            // Check walkable golden energy bridges
+            for (const br of bridges) {
+                const abx = br.b.x - br.a.x;
+                const abz = br.b.z - br.a.z;
+                const lenSq = abx * abx + abz * abz;
+                if (lenSq === 0) continue;
+                let t = ((x - br.a.x) * abx + (z - br.a.z) * abz) / lenSq;
+                t = Math.max(0, Math.min(1, t));
+                const projX = br.a.x + t * abx;
+                const projZ = br.a.z + t * abz;
+                const dist = Math.hypot(x - projX, z - projZ);
+                if (dist <= br.width) {
+                    const by = br.a.y + t * (br.b.y - br.a.y);
+                    if (y >= by - 2.0 && y <= by + 6.0) {
+                        if (bestY === null || by > bestY) bestY = by;
+                    }
+                }
+            }
+
+            return bestY;
+        }
+
+        function getNearestIsland(pos) {
+            let nearest = islands[0];
+            let minD = Infinity;
+            for (const isl of islands) {
+                const d = Math.hypot(pos.x - isl.cx, pos.z - isl.cz);
+                if (d < minD) {
+                    minD = d;
+                    nearest = isl;
+                }
+            }
+            return { island: nearest, dist: minD };
+        }
+
+        // =========================================================================
+        // 14. MAIN SIMULATION & ANIMATION LOOP
+        // =========================================================================
+        const clock = new THREE.Clock();
+
+        function updateWorldAnimations(elapsed, dt) {
+            // 1. Smoothly interpolate rock shell opacity for X-Ray Scanner
+            const targetAlpha = gameState.xray ? SHELL_XRAY : SHELL_SOLID;
+            for (const shell of rockShells) {
+                shell.material.opacity += (targetAlpha - shell.material.opacity) * Math.min(1, dt * 6);
+            }
+
+            // 2. Pulse & rotate suspended golden core crystals inside islands
+            for (const c of coreCrystals) {
+                c.mesh.rotation.y += dt * (c.isRing ? -0.9 : 1.1);
+                c.mesh.position.y = c.baseY + Math.sin(elapsed * 2.2 + c.phase) * 0.35;
+            }
+
+            // 3. Rotate vertical golden portal rings
+            for (const p of portals) {
+                p.rotation.y += dt * 0.6;
+            }
+
+            // 4. Animate cascading waterfalls
+            for (const wf of waterfalls) {
+                const posArr = wf.points.geometry.attributes.position.array;
+                for (let f = 0; f < wf.angles.length; f++) {
+                    const ang = wf.angles[f];
+                    for (let p = 0; p < wf.ppf; p++) {
+                        const idx = f * wf.ppf + p;
+                        const u = (wf.phases[idx] + elapsed * 0.45) % 1.0;
+                        const kIn = 1 - 0.85 * u;
+                        posArr[idx * 3] = wf.cx + wf.R * 0.95 * Math.cos(ang) * kIn;
+                        posArr[idx * 3 + 1] = wf.y0 - wf.depth * 0.9 * Math.pow(u, 0.9);
+                        posArr[idx * 3 + 2] = wf.cz - wf.R * 0.95 * Math.sin(ang) * kIn;
+                    }
+                }
+                wf.points.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // 5. Drift background stars & cyber-clouds gently
+            const sArr = starField.geometry.attributes.position.array;
+            for (let i = 0; i < numStars; i++) {
+                sArr[i * 3] = starBasePos[i * 3] + Math.sin(elapsed * 0.35 + starPhases[i]) * 1.2;
+                sArr[i * 3 + 2] = starBasePos[i * 3 + 2] + Math.cos(elapsed * 0.3 + starPhases[i]) * 1.2;
+            }
+            starField.geometry.attributes.position.needsUpdate = true;
+
+            cyberClouds.forEach((cc, idx) => {
+                cc.rotation.y = elapsed * 0.03 * (idx % 2 === 0 ? 1 : -1);
+            });
+
+            // 6. Animate Echo Lake water ripple
+            if (lakeRippleMesh) {
+                const rippleScale = 0.5 + ((elapsed * 0.55) % 1.0) * 2.4;
+                lakeRippleMesh.scale.set(rippleScale, rippleScale, 1);
+                lakeRippleMesh.material.opacity = Math.max(0, 0.75 * (1 - ((elapsed * 0.55) % 1.0)));
+            }
+
+            // 7. AI Patrol Airship orbit
+            const aiAng = elapsed * 0.28;
+            const aiRad = 15.5 * SCALE;
+            aiShip.position.set(
+                Math.cos(aiAng) * aiRad,
+                16 + Math.sin(elapsed * 0.8) * 3.5,
+                -Math.sin(aiAng) * aiRad
+            );
+            aiShip.rotation.y = aiAng;
+        }
+
+        function updatePlayerAndShip(elapsed, dt) {
+            const promptEl = document.getElementById('action-prompt');
+            const actionKeyEl = document.getElementById('action-key');
+            const actionTextEl = document.getElementById('action-text');
+            gameState.currentContextAction = null;
+
+            const moveForward = (keys['w'] || keys['arrowup'] || touchState.forward ? 1 : 0) - (keys['s'] || keys['arrowdown'] || touchState.backward ? 1 : 0);
+            const moveStrafe = (keys['d'] || keys['arrowright'] || touchState.right ? 1 : 0) - (keys['a'] || keys['arrowleft'] || touchState.left ? 1 : 0);
+
+            if (gameState.mode === 'WALK') {
+                // --- WALKING MODE ---
+                const speed = (keys['shift'] ? 16.5 : 10.0);
+                const forwardVec = new THREE.Vector3(-Math.sin(gameState.camYaw), 0, -Math.cos(gameState.camYaw));
+                const rightVec = new THREE.Vector3(Math.cos(gameState.camYaw), 0, -Math.sin(gameState.camYaw));
+
+                const moveDir = new THREE.Vector3()
+                    .addScaledVector(forwardVec, moveForward)
+                    .addScaledVector(rightVec, moveStrafe);
+
+                if (moveDir.lengthSq() > 0.001) {
+                    moveDir.normalize();
+                    playerGroup.position.x += moveDir.x * speed * dt;
+                    playerGroup.position.z += moveDir.z * speed * dt;
+                    const targetRot = Math.atan2(moveDir.x, moveDir.z);
+                    playerGroup.rotation.y = targetRot;
+                    if (fishingState.status !== 'IDLE') cancelFishing();
+                }
+
+                // Gravity & Grounding
+                const groundY = getGroundHeightAt(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z);
+                if (groundY !== null && playerGroup.position.y + gameState.playerVelY * dt <= groundY) {
+                    playerGroup.position.y = groundY;
+                    gameState.playerVelY = 0;
+                    gameState.grounded = true;
+                } else {
+                    gameState.playerVelY -= 32.0 * dt;
+                    playerGroup.position.y += gameState.playerVelY * dt;
+                    gameState.grounded = false;
+                }
+
+                // Void Safety Rescue Beam
+                if (playerGroup.position.y < -38) {
+                    const { island } = getNearestIsland(playerGroup.position);
+                    playerGroup.position.set(island.cx, island.y0 + 1.0, island.cz);
+                    gameState.playerVelY = 0;
+                    playChime(523.25, 0.3);
+                    showToast("✨", `Golden rescue beam returned you to ${island.name}`);
+                }
+
+                // Bobbing idle animation for player scarf
+                scarf.position.y = 1.55 + Math.sin(elapsed * 4) * 0.04;
+
+                // Update Fishing State Machine
+                if (fishingState.status === 'CASTING') {
+                    fishingState.timer -= dt;
+                    bobberMesh.position.y = echoLakeInfo.y0 + 0.25 + Math.sin(elapsed * 5) * 0.06;
+                    if (fishingState.timer <= 0) {
+                        fishingState.status = 'BITE';
+                        fishingState.timer = 3.2; // 3.2 seconds window to reel in
+                        bobberMesh.material.color.setHex(PALETTE.CYBER_GLOW);
+                        playChime(784, 0.25);
+                    }
+                } else if (fishingState.status === 'BITE') {
+                    fishingState.timer -= dt;
+                    bobberMesh.position.y = echoLakeInfo.y0 + 0.12 + Math.sin(elapsed * 22) * 0.14;
+                    if (fishingState.timer <= 0) {
+                        showToast("🐟", "The fish slipped away! Cast again.");
+                        cancelFishing();
+                    }
+                }
+
+                if (fishingLine.visible) {
+                    const rodPos = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1.4, playerGroup.position.z);
+                    fishingLine.geometry.setFromPoints([rodPos, bobberMesh.position]);
+                }
+
+                // Check Context Prompts: 1) Board Ship, 2) Fish at Echo Lake
+                const distToShip = playerGroup.position.distanceTo(playerShip.position);
+                const distToLakeCenter = Math.hypot(playerGroup.position.x - echoLakeInfo.cx, playerGroup.position.z - echoLakeInfo.cz);
+                const nearEchoLake = Math.abs(playerGroup.position.y - echoLakeInfo.y0) < 2.5 && distToLakeCenter <= echoLakeInfo.lakeR + 3.2;
+
+                if (distToShip < 6.0) {
+                    gameState.currentContextAction = 'BOARD';
+                    actionKeyEl.textContent = 'F';
+                    actionTextEl.textContent = 'BOARD GOLDEN SKIFF';
+                    promptEl.classList.remove('hidden');
+                } else if (fishingState.status === 'BITE') {
+                    gameState.currentContextAction = 'FISH_REEL';
+                    actionKeyEl.textContent = 'E';
+                    actionTextEl.textContent = 'BITE! REEL IN CATCH!';
+                    promptEl.classList.remove('hidden');
+                } else if (fishingState.status === 'CASTING') {
+                    gameState.currentContextAction = 'FISH_REEL';
+                    actionKeyEl.textContent = 'E';
+                    actionTextEl.textContent = 'WAITING FOR BITE... (CANCEL)';
+                    promptEl.classList.remove('hidden');
+                } else if (nearEchoLake) {
+                    gameState.currentContextAction = 'FISH_CAST';
+                    actionKeyEl.textContent = 'E';
+                    actionTextEl.textContent = 'CAST FISHING LINE';
+                    promptEl.classList.remove('hidden');
+                } else {
+                    promptEl.classList.add('hidden');
+                }
+
+                // Update Nearest District HUD
+                const { island } = getNearestIsland(playerGroup.position);
+                document.getElementById('current-district').textContent = island.name.toUpperCase();
+
+                // Update Third-Person Camera around Player
+                const targetCamPos = new THREE.Vector3(
+                    playerGroup.position.x + Math.sin(gameState.camYaw) * Math.cos(gameState.camPitch) * gameState.camDist,
+                    playerGroup.position.y + 2.2 + Math.sin(gameState.camPitch) * gameState.camDist,
+                    playerGroup.position.z + Math.cos(gameState.camYaw) * Math.cos(gameState.camPitch) * gameState.camDist
+                );
+                camera.position.lerp(targetCamPos, Math.min(1, dt * 10));
+                camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.6, playerGroup.position.z);
+
+            } else {
+                // --- AIRSHIP PILOT MODE ---
+                const turnInput = (keys['a'] || keys['arrowleft'] || touchState.left ? 1 : 0) - (keys['d'] || keys['arrowright'] || touchState.right ? 1 : 0);
+                const verticalInput = (keys[' '] || touchState.up ? 1 : 0) - (keys['shift'] || touchState.down ? 1 : 0);
+
+                playerShip.rotation.y += turnInput * 1.65 * dt;
+                // Gentle visual roll when turning
+                playerShip.rotation.z = THREE.MathUtils.lerp(playerShip.rotation.z, turnInput * 0.28, dt * 5);
+
+                const shipForward = new THREE.Vector3(Math.sin(playerShip.rotation.y), 0, Math.cos(playerShip.rotation.y));
+                const targetSpeed = moveForward * 34.0;
+                const desiredVel = shipForward.multiplyScalar(targetSpeed);
+                desiredVel.y = verticalInput * 18.0;
+
+                gameState.shipVel.lerp(desiredVel, Math.min(1, dt * 4.5));
+                playerShip.position.addScaledVector(gameState.shipVel, dt);
+
+                // Hover bobbing
+                playerShip.position.y += Math.sin(elapsed * 3.0) * 0.015;
+                playerShip.position.y = THREE.MathUtils.clamp(playerShip.position.y, -25, 75);
+
+                // Check if close enough to an island to land/disembark
+                const { island, dist } = getNearestIsland(playerShip.position);
+                document.getElementById('current-district').textContent = `AIRSPACE // ${island.name.toUpperCase()}`;
+
+                const heightAboveIsland = playerShip.position.y - island.y0;
+                if (dist <= island.R && heightAboveIsland >= -0.5 && heightAboveIsland <= 6.5) {
+                    gameState.currentContextAction = 'LAND';
+                    actionKeyEl.textContent = 'F';
+                    actionTextEl.textContent = `LAND AT ${island.name.toUpperCase()}`;
+                    promptEl.classList.remove('hidden');
+                } else {
+                    promptEl.classList.add('hidden');
+                }
+
+                // Follow Camera behind Airship (with optional mouse orbit offset)
+                const effectiveYaw = playerShip.rotation.y + Math.PI + gameState.camYaw;
+                const targetCamPos = new THREE.Vector3(
+                    playerShip.position.x + Math.sin(effectiveYaw) * Math.cos(gameState.camPitch) * gameState.camDist,
+                    playerShip.position.y + 3.0 + Math.sin(gameState.camPitch) * gameState.camDist,
+                    playerShip.position.z + Math.cos(effectiveYaw) * Math.cos(gameState.camPitch) * gameState.camDist
+                );
+                camera.position.lerp(targetCamPos, Math.min(1, dt * 7));
+                camera.lookAt(playerShip.position.x, playerShip.position.y + 1.2, playerShip.position.z);
+            }
+        }
+
+        function updateDistrictLabels() {
+            const halfW = window.innerWidth / 2;
+            const halfH = window.innerHeight / 2;
+            const tempVec = new THREE.Vector3();
+
+            for (const item of labelElements) {
+                tempVec.copy(item.pos);
+                const dist = camera.position.distanceTo(tempVec);
+                tempVec.project(camera);
+
+                if (tempVec.z > 1 || dist > 165) {
+                    item.el.style.opacity = '0';
+                } else {
+                    const x = (tempVec.x * halfW) + halfW;
+                    const y = -(tempVec.y * halfH) + halfH;
+                    item.el.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
+                    item.el.style.opacity = dist > 120 ? '0.45' : '0.92';
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.getElapsedTime();
+
+            updateWorldAnimations(elapsed, dt);
+            updatePlayerAndShip(elapsed, dt);
+            updateDistrictLabels();
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.onload = function() {
+            showToast("✨", "Welcome to Pangaea 2.0! Walk to the Golden Skiff [F] or visit Echo Lake [E].");
+            animate();
+        };
+    </script>
+</body>
+</html>
