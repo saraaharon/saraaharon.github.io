@@ -95,6 +95,30 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
             }
         }
+        /* Compact Mobile Font & HUD Scaling (Appended Safely) */
+        @media (max-width: 768px) {
+            /* Scale down all text inside the top HUD cards */
+            .glass-panel h1, 
+            .glass-panel .text-lg, 
+            .glass-panel .text-xl,
+            .glass-panel .text-base {
+                font-size: 11px !important;
+                line-height: 1.2 !important;
+            }
+
+            .glass-panel p, 
+            .glass-panel span, 
+            .glass-panel .text-xs,
+            .glass-panel .text-sm {
+                font-size: 8.5px !important;
+                line-height: 1.15 !important;
+            }
+
+            /* Tighten inner card spacing so the top-left and top-right boxes don't touch */
+            .glass-panel {
+                padding: 5px 8px !important;
+            }
+        }
     </style>
 </head>
 <body class="text-[#f4f1e6]">
