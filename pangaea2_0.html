@@ -165,7 +165,7 @@
                 <div id="mode-badge" class="text-xs sm:text-sm mono font-bold text-[#5ef0e0]">EXPLORER</div>
             </div>
             <button id="btn-sound" onclick="toggleAudio()" title="Toggle Ambient Synth" class="p-2 rounded-xl bg-[#1e2a5e]/60 border border-[#5ef0e0]/30 text-[#5ef0e0] hover:text-white transition cursor-pointer text-xs mono">
-                🔇 SFX
+                🔇
             </button>
         </div>
     </div>
@@ -264,7 +264,7 @@
                 audioCtx.resume();
             }
             soundEnabled = !soundEnabled;
-            document.getElementById('btn-sound').textContent = soundEnabled ? '🔊 SFX' : '🔇 SFX';
+            document.getElementById('btn-sound').textContent = soundEnabled ? '🔊' : '🔇';
             if (soundEnabled) playChime(523.25, 0.15);
         }
 
