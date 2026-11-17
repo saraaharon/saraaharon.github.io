@@ -80,29 +80,33 @@
             border-radius: 9999px;
         }
 
-        /* Foolproof Mobile Layout Fix */
+        /* Clean Mobile Layout & Exquisite Buttons */
         @media (max-width: 768px) {
             body {
                 -webkit-text-size-adjust: 100%;
-                overflow-y: auto !important;
-            }
-            
-            /* Unpin all absolute elements at the top and let them flow naturally */
-            body > div[class*="absolute"] {
-                position: relative !important;
-                inset: auto !important;
-                width: 100% !important;
-                margin-bottom: 8px !important;
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 6px !important;
-                padding: 0 12px !important;
-                box-sizing: border-box !important;
             }
 
-            .glass-panel {
-                padding: 6px 10px !important;
-                font-size: 11px !important;
+            /* Hide the bulky title header on mobile to completely prevent overlapping */
+            div.absolute.top-4:has(h1), 
+            div.absolute.top-4:first-of-type {
+                display: none !important;
+            }
+
+            /* Keep top-right controls compact and clean */
+            div.absolute.top-4 {
+                top: 8px !important;
+                right: 8px !important;
+                left: auto !important;
+                width: auto !important;
+            }
+
+            /* Force all buttons (arrows, jump, sfx) to look exquisite and uniform */
+            button, .glass-panel button, [class*="rounded"] {
+                background: rgba(7, 11, 28, 0.95) !important;
+                border: 1px solid #5ef0e0 !important;
+                color: #5ef0e0 !important;
+                font-family: 'JetBrains Mono', monospace !important;
+                box-shadow: 0 0 10px rgba(94, 240, 224, 0.25) !important;
             }
         }
     </style>
