@@ -80,29 +80,19 @@
             border-radius: 9999px;
         }
 
-        /* Foolproof Mobile Top-HUD Stack (Zero Arrow Interference) */
+        /* Exquisite Dark-Blue & Cyan Mobile Controls */
         @media (max-width: 768px) {
             body {
                 -webkit-text-size-adjust: 100%;
-                overflow-x: hidden;
-            }
-            
-            /* Target ONLY top-positioned absolute elements and stack them naturally */
-            .absolute[class*="top-"] {
-                position: relative !important;
-                inset: auto !important;
-                width: 100% !important;
-                margin: 4px 0 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 6px !important;
-                box-sizing: border-box !important;
             }
 
-            /* Make glass panels fit the stacked mobile width perfectly */
-            .glass-panel {
-                width: 100% !important;
-                max-width: 100% !important;
+            /* Restore the sleek dark-navy & cyan-glow buttons */
+            button, .glass-panel button {
+                font-family: 'JetBrains Mono', monospace !important;
+                background-color: rgba(7, 11, 28, 0.92) !important;
+                border: 1px solid rgba(94, 240, 224, 0.4) !important;
+                color: #5ef0e0 !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
             }
         }
     </style>
