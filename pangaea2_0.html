@@ -161,8 +161,8 @@
     <div class="fixed top-4 right-4 z-20 flex flex-col items-end gap-2">
         <div class="glass-panel rounded-2xl px-3.5 py-2 flex items-center gap-3">
             <div class="text-right">
-                <div class="text-[10px] mono text-[#9db4cc] uppercase">Active Vessel / Mode</div>
-                <div id="mode-badge" class="text-xs sm:text-sm mono font-bold text-[#5ef0e0]">ON FOOT // EXPLORER</div>
+                <div class="text-[10px] mono text-[#9db4cc] uppercase">Mode</div>
+                <div id="mode-badge" class="text-xs sm:text-sm mono font-bold text-[#5ef0e0]">EXPLORER</div>
             </div>
             <button id="btn-sound" onclick="toggleAudio()" title="Toggle Ambient Synth" class="p-2 rounded-xl bg-[#1e2a5e]/60 border border-[#5ef0e0]/30 text-[#5ef0e0] hover:text-white transition cursor-pointer text-xs mono">
                 🔇 SFX
@@ -1149,7 +1149,7 @@
             const statusEl = document.getElementById('xray-status');
             const dotEl = document.getElementById('xray-dot');
             if (gameState.xray) {
-                statusEl.textContent = "VIEW: X-RAY ACTIVE [X]";
+                statusEl.textContent = "VIEW: X-RAY [X]";
                 statusEl.className = "text-[#5ef0e0]";
                 dotEl.className = "w-2 h-2 rounded-full bg-[#5ef0e0] shadow-[0_0_8px_#5ef0e0]";
                 playChime(587.33, 0.2);
@@ -1213,7 +1213,7 @@
                 gameState.mode = 'PILOT';
                 playerGroup.visible = false;
                 gameState.camDist = 20;
-                document.getElementById('mode-badge').textContent = "PILOTING // GOLDEN SKIFF";
+                document.getElementById('mode-badge').textContent = "PILOTING";
                 document.getElementById('mode-badge').className = "text-xs sm:text-sm mono font-bold text-[#f0b94d]";
                 document.getElementById('controls-hint').innerHTML = `
                     <strong class="text-white">W/S</strong> Thrust &nbsp;•&nbsp;
@@ -1229,7 +1229,7 @@
                 playerGroup.position.set(playerShip.position.x + 2.5, playerShip.position.y + 0.5, playerShip.position.z);
                 playerGroup.visible = true;
                 gameState.camDist = 14;
-                document.getElementById('mode-badge').textContent = "ON FOOT // EXPLORER";
+                document.getElementById('mode-badge').textContent = "EXPLORER";
                 document.getElementById('mode-badge').className = "text-xs sm:text-sm mono font-bold text-[#5ef0e0]";
                 document.getElementById('controls-hint').innerHTML = `
                     <strong class="text-white">WASD / Arrows</strong> Move &nbsp;•&nbsp;
