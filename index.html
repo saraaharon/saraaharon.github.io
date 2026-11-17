@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Asimovian&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -61,16 +61,20 @@
             padding: 0 24px;
         }
         h1 {
+            font-family: 'Asimovian', 'Inter', system-ui, sans-serif;
             font-size: clamp(2.5rem, 7vw, 5rem);
-            font-weight: 800;
+            font-weight: 400;
             line-height: 1.05;
-            letter-spacing: -0.02em;
+            letter-spacing: 0.02em;
             margin-bottom: 16px;
         }
         .subtitle {
-            font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: clamp(0.85rem, 1.5vw, 1rem);
             font-weight: 400;
-            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.25em;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
             margin-bottom: 40px;
         }
         .buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
@@ -161,7 +165,7 @@
             canvas.height = h * dpr;
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            const count = Math.round((w * h) / 9000); // density scales with screen size
+            const count = Math.round((w * h) / 9000);
             stars = Array.from({ length: count }, () => ({
                 x: Math.random() * w,
                 y: Math.random() * h,
