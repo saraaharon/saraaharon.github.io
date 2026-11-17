@@ -95,6 +95,7 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
             }
         }
+
         /* Compact Mobile Font & HUD Scaling (Appended Safely) */
         @media (max-width: 768px) {
             /* Scale down all text inside the top HUD cards */
@@ -119,6 +120,27 @@
                 padding: 5px 8px !important;
             }
         }
+
+        /* Equalize Top-Left & Top-Right HUD Pill Heights on Mobile */
+        @media (max-width: 768px) {
+            /* Match exact height and vertical centering for both top pills */
+            .absolute.top-4.left-4 > .glass-panel:first-child,
+            .absolute.top-4.right-4 > .glass-panel:first-child,
+            .absolute.top-4.right-4.glass-panel {
+                min-height: 40px !important;
+                max-height: 40px !important;
+                display: flex !important;
+                align-items: center !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Slightly trim the inner SFX button padding so it sits flush inside the 40px pill */
+            .absolute.top-4.right-4 button {
+                padding: 4px 8px !important;
+                min-height: unset !important;
+            }
+        }
+
     </style>
 </head>
 <body class="text-[#f4f1e6]">
@@ -1600,7 +1622,7 @@
         });
 
         window.onload = function() {
-            showToast("✨", "Welcome to Pangaea 2.0! Walk to the Golden Skiff [F] or visit Echo Lake [E].");
+            showToast("✨", "Welcome to Pangaea 2.0!");
             animate();
         };
     </script>

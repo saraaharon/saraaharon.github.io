@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pangaea 2.0 // The Common Sky (Interactive WebGL)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #070b1c; color: #f4f1e6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
+        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        /* HUD UI Styling */
+        .hud { position: absolute; z-index: 10; pointer-events: none; }
+        #top-left { top: 20px; left: 25px; }
+        h1 { font-size: 22px; font-weight: 800; letter-spacing: 2px; color: #fff; text-shadow: 0 0 10px rgba(94,240,224,0.5); }
+        .subtitle { font-size: 11px; color: #5ef0e0; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+        
+        #top-right { top: 20px; right: 25px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+        .badge { background: rgba(7, 11, 28, 0.85); border: 1px solid #5ef0e0; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #f0b94d; box-shadow: 0 0 12px rgba(94,240,224,0.2); pointer-events: auto; }
+        
+        /* Minimap Radar */
+        #radar-container { width: 130px; height: 130px; background: rgba(7, 11, 28, 0.9); border: 1px solid rgba(94,240,224,0.4); border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(0,255,255,0.15); pointer-events: auto; }
+        #radar-blip { width: 6px; height: 6px; background: #f0b94d; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 8px #f0b94d; }
+        .radar-district { width: 4px; height: 4px; background: #5ef0e0; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); }
+
+        #controls-hint { position: absolute; bottom: 25px; left: 25px; background: rgba(7, 11, 28, 0.85); border-left: 3px solid #f0b94d; padding: 12px 18px; border-radius: 0 6px 6px 0; font-size: 12px; line-height: 1.6; z-index: 10; backdrop-filter: blur(4px); pointer-events: auto; }
+        span.key { background: #1e2a5e; border: 1px solid #5ef0e0; padding: 2px 6px; border-radius: 3px; color: #5ef0e0; font-family: monospace; font-weight: bold; }
+
+        /* District Lore Modal */
+        #lore-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: rgba(7, 11, 28, 0.95); border: 1px solid #5ef0e0; padding: 25px; border-radius: 8px; width: 340px; z-index: 20; opacity: 0; pointer-events: none; transition: all 0.3s ease; box-shadow: 0 0 30px rgba(94,240,224,0.3); }
+        #lore-modal.active { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        #lore-modal h3 { color: #f0b94d; font-size: 16px; margin-bottom: 8px; letter-spacing: 1px; }
+        #lore-modal p { font-size: 13px; line-height: 1.5; color: #9db4cc; margin-bottom: 15px; }
+        #lore-modal button { background: #1e2a5e; border: 1px solid #5ef0e0; color: #5ef0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+        #lore-modal button:hover { background: #5ef0e0; color: #070b1c; }
+
+        /* Fishing Minigame Overlay */
+        #fishing-ui { position: absolute; bottom: 30px; right: 30px; background: rgba(7, 11, 28, 0.9); border: 1px solid #6fd08c; padding: 15px 20px; border-radius: 6px; z-index: 10; display: none; text-align: center; box-shadow: 0 0 20px rgba(111,208,140,0.3); pointer-events: auto; }
+        #fishing-ui h4 { color: #6fd08c; margin-bottom: 8px; font-size: 14px; }
+        #cast-btn { background: #6fd08c; color: #070b1c; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 6px; }
+
+
+        /* Exquisite Dark-Blue & Cyan Mobile Controls */
+        @media (max-width: 768px) {
+            body {
+                -webkit-text-size-adjust: 100%;
+            }
+
+            /* Restore the sleek dark-navy & cyan-glow buttons */
+            button, .glass-panel button {
+                font-family: 'JetBrains Mono', monospace !important;
+                background-color: rgba(7, 11, 28, 0.92) !important;
+                border: 1px solid rgba(94, 240, 224, 0.4) !important;
+                color: #5ef0e0 !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="hud" id="top-left">
+        <h1>PANGAEA 2.0 // THE COMMON SKY</h1>
+        <div class="subtitle">Extended City Atlas | Cyber-Sandbox</div>
+    </div>
+
+    <div class="hud" id="top-right">
+        <div class="badge" id="mode-badge">MODE: WALK (EXPLORER)</div>
+        <div id="radar-container">
+            <div id="radar-blip"></div>
+        </div>
+    </div>
+
+    <div id="controls-hint">
+        <b>Controls:</b> <span class="key">W A S D</span> Move / Steer | <span class="key">Space</span> Jump / Climb<br>
+        <b>Airship:</b> Walk to Golden Skiff & press <span class="key">F</span> to Pilot / Land<br>
+        <b>Scanner:</b> Press <span class="key">X</span> to Toggle X-Ray Cores | <span class="key">Click</span> Any Island for Lore
+    </div>
+
+    <div id="lore-modal">
+        <h3 id="lore-title">District Name</h3>
+        <p id="lore-desc">District architectural details and procedural metadata.</p>
+        <button onclick="closeLore()">Close Terminal</button>
+    </div>
+
+    <div id="fishing-ui">
+        <h4>05 ECHO LAKE PIER</h4>
+        <div id="fish-status" style="font-size: 12px; color: #f4f1e6;">Cast your line into the cyber-waters.</div>
+        <button id="cast-btn" onclick="triggerFishing()">Cast Line</button>
+    </div>
+
+    <!-- Include Three.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- SCENE SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x070b1c);
+        scene.fog = new THREE.FogExp2(0x070b1c, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xf0b94d, 1.2);
+        dirLight.position.set(20, 40, 20);
+        scene.add(dirLight);
+
+        // --- PALETTE ---
+        const COLORS = {
+            GOLD: 0xf0b94d, AQUA: 0x5ef0e0, LEAF: 0x6fd08c, 
+            ROCK: 0x9db4cc, CREAM: 0xf4f1e6, SKY: 0x8fc3e8, 
+            COPPER: 0xd97736, CYBER: 0x1e2a5e, GLOW: 0x00ffff
+        };
+
+        // --- GAME STATE ---
+        let isPiloting = false;
+        let xRayActive = false;
+        const keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
+        let playerPos = new THREE.Vector3(0, 1.5, 0);
+        let playerVel = new THREE.Vector3();
+        let shipPos = new THREE.Vector3(0, 4.5, -3.0);
+        let shipYaw = 0;
+        let shipSpeed = 0;
+
+        const rockShells = [];
+        const interactiveIslands = [];
+
+        // --- BACKGROUND STARFIELD & CODE RAIN ---
+        const starGeo = new THREE.BufferGeometry();
+        const starCnt = 800;
+        const starPos = new Float32Array(starCnt * 3);
+        for(let i=0; i<starCnt*3; i+=3) {
+            starPos[i] = (Math.random() - 0.5) * 200;
+            starPos[i+1] = (Math.random() - 0.5) * 150;
+            starPos[i+2] = (Math.random() - 0.5) * 200;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({ color: COLORS.CREAM, size: 0.8, transparent: true, opacity: 0.7 });
+        const starField = new THREE.Points(starGeo, starMat);
+        scene.add(starField);
+
+        // --- PROCEDURAL ISLAND GENERATOR ---
+        function createIsland(cx, cy, R, depth, z0, name, lore) {
+            const group = new THREE.Group();
+            group.position.set(cx, z0, cy);
+            group.userData = { name: name, lore: lore };
+
+            // Rock Shell
+            const geom = new THREE.ConeGeometry(R, depth, 16, 8, true);
+            geom.scale(1, 1, 0.6);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: COLORS.ROCK, 
+                roughness: 0.9, 
+                transparent: true, 
+                opacity: 0.55, 
+                side: THREE.DoubleSide 
+            });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.position.y = -depth / 2;
+            group.add(mesh);
+            rockShells.push(mat);
+
+            // Wireframe Overlay
+            const wireMat = new THREE.MeshBasicMaterial({ color: COLORS.AQUA, wireframe: true, transparent: true, opacity: 0.25 });
+            const wireMesh = new THREE.Mesh(geom, wireMat);
+            wireMesh.position.y = -depth / 2;
+            group.add(wireMesh);
+
+            // Surface Top (Leaf/Moss)
+            const topGeo = new THREE.CylinderGeometry(R * 0.95, R * 0.95, 0.3, 16);
+            const topMat = new THREE.MeshStandardMaterial({ color: COLORS.LEAF, roughness: 0.7 });
+            const topMesh = new THREE.Mesh(topGeo, topMat);
+            topMesh.position.y = 0.15;
+            group.add(topMesh);
+
+            // Golden Core Crystal Inside
+            const coreGeo = new THREE.OctahedronGeometry(R * 0.3);
+            const coreMat = new THREE.MeshStandardMaterial({ color: COLORS.GOLD, emissive: COLORS.GOLD, emissiveIntensity: 0.6 });
+            const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+            coreMesh.position.y = -depth * 0.4;
+            group.add(coreMesh);
+
+            scene.add(group);
+            interactiveIslands.push({ group: group, radius: R, x: cx, z: cy });
+            return group;
+        }
+
+        // --- BUILD ARCHIPELAGO (11 DISTRICTS) ---
+        createIsland(0, 0, 6.0, 8.5, 0, "01 The Sunward Citadel", "The administrative and spiritual heart of Pangaea 2.0, anchored directly above the central axis.");
+        
+        const SATS = {
+            "02 The Glass Gardens": [135, 12.0, 3.2, 5.0, 1.2, "Bioluminescent botanical biodomes cultivating rare flora."],
+            "03 Crystal Heights": [35, 13.0, 3.0, 6.0, 2.0, "Soaring spires focusing resonant acoustic energy."],
+            "04 Hearth Quarter": [210, 12.5, 3.3, 5.2, 0.6, "Residential hubs powered by geothermally warmed conduits."],
+            "05 Echo Lake": [325, 9.5, 2.6, 4.5, 0.2, "Reflective high-altitude reservoir used for data-fishing."],
+            "06 Arrival Port": [270, 13.5, 2.5, 3.5, -0.8, "Primary docking bay and launching point for Golden Skiffs."],
+            "07 The Skyforge & Kilns": [75, 12.0, 2.9, 5.0, 1.5, "Industrial manufacturing and alloy shaping ring."],
+            "08 The Cloud Harvesters": [165, 14.5, 2.8, 4.8, 0.9, "Atmospheric condensing arrays harvesting ambient moisture."],
+            "09 The Forum of Voices": [15, 9.0, 2.5, 4.2, 0.4, "Open-air assembly amphitheater for community governance."],
+            "10 The Remembrance Gardens": [355, 13.5, 3.1, 5.5, 0.8, "Memorial arboretum honoring past exploratory expeditions."],
+            "11 Neighborhood Commons": [300, 11.5, 2.7, 4.6, 0.5, "Communal plazas, markets, and public gathering grounds."]
+        };
+
+        const districtPositions = [];
+        for (let name in SATS) {
+            let [ang, dist, R, depth, z0, lore] = SATS[name];
+            let rad = THREE.MathUtils.degToRad(ang);
+            let x = dist * Math.cos(rad);
+            let z = dist * Math.sin(rad);
+            createIsland(x, z, R, depth, z0, name, lore);
+            districtPositions.push({ name: name, x: x, z: z });
+        }
+
+        // --- GOLDEN SKIFF (AIRSHIP) ---
+        const shipGroup = new THREE.Group();
+        const hullGeo = new THREE.BoxGeometry(1.8, 0.8, 3.5);
+        const hullMat = new THREE.MeshStandardMaterial({ color: COLORS.GOLD, metalness: 0.8, roughness: 0.2 });
+        const hull = new THREE.Mesh(hullGeo, hullMat);
+        shipGroup.add(hull);
+        
+        const cabinGeo = new THREE.SphereGeometry(0.7, 16, 16);
+        cabinGeo.scale(1, 0.7, 1.5);
+        const cabinMat = new THREE.MeshStandardMaterial({ color: COLORS.AQUA, transparent: true, opacity: 0.7, roughness: 0.1 });
+        const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+        cabin.position.set(0, 0.5, -0.2);
+        shipGroup.add(cabin);
+        shipGroup.position.copy(shipPos);
+        scene.add(shipGroup);
+
+        // --- NEON FLIGHT TRAILS ---
+        const trailPointsCount = 50;
+        const trailGeo = new THREE.BufferGeometry();
+        const trailPositions = new Float32Array(trailPointsCount * 3);
+        for(let i=0; i<trailPointsCount*3; i++) trailPositions[i] = 0;
+        trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+        const trailMat = new THREE.LineBasicMaterial({ color: COLORS.GLOW, transparent: true, opacity: 0.6, linewidth: 2 });
+        const flightTrail = new THREE.Line(trailGeo, trailMat);
+        scene.add(flightTrail);
+        let trailIndex = 0;
+
+        // --- CYBER CLOUDS ---
+        function createCloud(x, y, z) {
+            const cloudGeo = new THREE.DodecahedronGeometry(3.5, 1);
+            const cloudMat = new THREE.MeshStandardMaterial({ color: COLORS.CYBER, transparent: true, opacity: 0.15, wireframe: true });
+            const cMesh = new THREE.Mesh(cloudGeo, cloudMat);
+            cMesh.position.set(x, y, z);
+            scene.add(cMesh);
+        }
+        createCloud(12, 5, 12);
+        createCloud(-13, 2, 11);
+        createCloud(14, -3, 8);
+
+        // --- RAYCASTER FOR LORE CLICKS & SHIP BOARDING ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'CANVAS') return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            // Check Island Clicks
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            for (let hit of intersects) {
+                let obj = hit.object;
+                while (obj.parent && !obj.userData.name) obj = obj.parent;
+                if (obj.userData && obj.userData.name) {
+                    document.getElementById('lore-title').innerText = obj.userData.name;
+                    document.getElementById('lore-desc').innerText = obj.userData.lore;
+                    document.getElementById('lore-modal').classList.add('active');
+                    return;
+                }
+            }
+        });
+
+        function closeLore() {
+            document.getElementById('lore-modal').classList.remove('active');
+        }
+
+        // --- CONTROLS & LISTENERS ---
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyW') keys.w = true;
+            if (e.code === 'KeyS') keys.s = true;
+            if (e.code === 'KeyA') keys.a = true;
+            if (e.code === 'KeyD') keys.d = true;
+            if (e.code === 'Space') keys.space = true;
+            if (e.code === 'ShiftLeft') keys.shift = true;
+            
+            if (e.code === 'KeyX') {
+                xRayActive = !xRayActive;
+                let targetAlpha = xRayActive ? 0.05 : 0.55;
+                rockShells.forEach(mat => mat.opacity = targetAlpha);
+            }
+
+            if (e.code === 'KeyF') {
+                let distToShip = playerPos.distanceTo(shipPos);
+                if (distToShip < 4.0 || isPiloting) {
+                    isPiloting = !isPiloting;
+                    document.getElementById('mode-badge').innerText = isPiloting ? "MODE: PILOTING SKIFF" : "MODE: WALK (EXPLORER)";
+                    document.getElementById('mode-badge').style.color = isPiloting ? "#5ef0e0" : "#f0b94d";
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') keys.w = false;
+            if (e.code === 'KeyS') keys.s = false;
+            if (e.code === 'KeyA') keys.a = false;
+            if (e.code === 'KeyD') keys.d = false;
+            if (e.code === 'Space') keys.space = false;
+            if (e.code === 'ShiftLeft') keys.shift = false;
+        });
+
+        // --- FISHING MINIGAME LOGIC ---
+        function checkFishingZone() {
+            let distToEchoLake = playerPos.distanceWithXZ ? 0 : Math.hypot(playerPos.x - (-8), playerPos.z - 4);
+            const fishUI = document.getElementById('fishing-ui');
+            if (distToEchoLake < 5.0 && !isPiloting) {
+                fishUI.style.display = 'block';
+            } else {
+                fishUI.style.display = 'none';
+            }
+        }
+
+        function triggerFishing() {
+            const status = document.getElementById('fish-status');
+            status.innerText = "Casting line into Echo Lake...";
+            setTimeout(() => {
+                const loot = ["A glowing Starlight Data-Shard!", "A rare Cyber-Koi!", "An ancient cartographic scroll!", "A handful of shimmering quartz data!"];
+                let found = loot[Math.floor(Math.random() * loot.length)];
+                status.innerText = `Reeled in: ${found}`;
+            }, 1800);
+        }
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+
+            // Minimap Radar update
+            const blip = document.getElementById('radar-blip');
+            let activePos = isPiloting ? shipPos : playerPos;
+            blip.style.left = `${50 + (activePos.x / 20) * 50}%`;
+            blip.style.top = `${50 + (activePos.z / 20) * 50}%`;
+
+            checkFishingZone();
+
+            if (isPiloting) {
+                // Airship Flight Physics
+                if (keys.w) shipSpeed = Math.min(shipSpeed + 5.0 * dt, 12.0);
+                if (keys.s) shipSpeed = Math.max(shipSpeed - 5.0 * dt, -4.0);
+                shipSpeed *= 0.98; // friction
+
+                if (keys.a) shipYaw += 1.5 * dt;
+                if (keys.d) shipYaw -= 1.5 * dt;
+
+                let forward = new THREE.Vector3(Math.sin(shipYaw), 0, Math.cos(shipYaw));
+                shipPos.addScaledVector(forward, shipSpeed * dt);
+
+                if (keys.space) shipPos.y += 4.0 * dt;
+                if (keys.shift) shipPos.y -= 4.0 * dt;
+
+                shipGroup.position.copy(shipPos);
+                shipGroup.rotation.y = shipYaw;
+                shipGroup.rotation.z = shipSpeed * 0.02;
+
+                // Update Flight Trail
+                const posArr = flightTrail.geometry.attributes.position.array;
+                posArr[trailIndex * 3] = shipPos.x;
+                posArr[trailIndex * 3 + 1] = shipPos.y - 0.2;
+                posArr[trailIndex * 3 + 2] = shipPos.z;
+                trailIndex = (trailIndex + 1) % trailPointsCount;
+                flightTrail.geometry.attributes.position.needsUpdate = true;
+
+                // Camera follow ship
+                let camTarget = shipPos.clone().add(new THREE.Vector3(0, 3, -8).applyAxisAngle(new THREE.Vector3(0,1,0), shipYaw));
+                camera.position.lerp(camTarget, 0.1);
+                camera.lookAt(shipPos.clone().add(new THREE.Vector3(0, 0, 2)));
+
+            } else {
+                // Walk Mode Physics
+                let moveDir = new THREE.Vector3();
+                if (keys.w) moveDir.z -= 1;
+                if (keys.s) moveDir.z += 1;
+                if (keys.a) moveDir.x -= 1;
+                if (keys.d) moveDir.x += 1;
+                moveDir.normalize();
+
+                playerVel.x = moveDir.x * 5.0;
+                playerVel.z = moveDir.z * 5.0;
+                playerPos.addScaledVector(playerVel, dt);
+
+                // Keep player clamped near platforms
+                playerPos.y = 1.5 + Math.sin(Date.now() * 0.002) * 0.05;
+
+                // Camera follow player
+                let camTarget = playerPos.clone().add(new THREE.Vector3(0, 4, 7));
+                camera.position.lerp(camTarget, 0.1);
+                camera.lookAt(playerPos);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Populate radar static dots for districts
+        const radarContainer = document.getElementById('radar-container');
+        districtPositions.forEach(d => {
+            let dot = document.createElement('div');
+            dot.className = 'radar-district';
+            dot.style.left = `${50 + (d.x / 20) * 50}%`;
+            dot.style.top = `${50 + (d.z / 20) * 50}%`;
+            radarContainer.appendChild(dot);
+        });
+
+        animate();
+
+        // Responsive window resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
