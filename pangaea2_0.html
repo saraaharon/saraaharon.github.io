@@ -121,12 +121,12 @@
             }
         }
 
-        /* Equalize Top-Left & Top-Right HUD Pill Heights on Mobile */
+        /* Universal Top HUD Pill Equalizer (Appended Safely) */
         @media (max-width: 768px) {
-            /* Match exact height and vertical centering for both top pills */
-            .absolute.top-4.left-4 > .glass-panel:first-child,
-            .absolute.top-4.right-4 > .glass-panel:first-child,
-            .absolute.top-4.right-4.glass-panel {
+            /* Target the two top-row glass panels directly by their position near the top */
+            div[class*="top-"] > .glass-panel:first-child,
+            div[class*="top-"].glass-panel {
+                height: 40px !important;
                 min-height: 40px !important;
                 max-height: 40px !important;
                 display: flex !important;
